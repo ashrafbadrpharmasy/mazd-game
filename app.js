@@ -11,43 +11,54 @@ import {
   ref,
   set,
   get,
-  onValue,
+  update,
   remove,
-  onDisconnect
+  onValue,
+  onDisconnect,
+  runTransaction
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
 
 
-// =====================================
-// FIREBASE CONFIG
-// =====================================
+/* =========================================
+   FIREBASE
+========================================= */
 
 const firebaseConfig = {
   apiKey: "AIzaSyAPEPcsqW4b_UiE9iv3nmC5EufdkJ7-xK0",
   authDomain: "mzad-game-45174.firebaseapp.com",
-  databaseURL: "https://mzad-game-45174-default-rtdb.firebaseio.com/",
   projectId: "mzad-game-45174",
   storageBucket: "mzad-game-45174.firebasestorage.app",
   messagingSenderId: "111631595997",
   appId: "1:111631595997:web:233d623bf2af5fe51ede34"
 };
 
-
-// =====================================
-// FIREBASE START
-// =====================================
-
 const app = initializeApp(firebaseConfig);
+
 const auth = getAuth(app);
-const db = getDatabase(app);
+
+const db = getDatabase(
+  app,
+  "https://mzad-game-45174-default-rtdb.firebaseio.com/"
+);
 
 
-// =====================================
-// GAME DATA
-// =====================================
+/* =========================================
+   GAME STATE
+========================================= */
 
 let UID = null;
 let MATCH_ID = null;
 let searching = false;
+let waitingListener = null;
+let matchListener = null;
+
+let myFormation = null;
+let myBudget = 200000000;
+
+
+/* =========================================
+   FORMATIONS
+========================================= */
 
 const formations = [
   "4-3-3",
@@ -63,939 +74,979 @@ const formations = [
 ];
 
 
-// =====================================
-// GET ROOT
-// =====================================
+/* =========================================
+   PLAYERS
+========================================= */
 
-function getRoot() {
-  let root = document.getElementById("root");
+const players = [
 
-  if (!root) {
-    root = document.createElement("div");
-    root.id = "root";
-    document.body.appendChild(root);
-  }
+  // GK
+  {id:"gk01",name:"Manuel Neuer",category:"GK",position:"GK",overall:89},
+  {id:"gk02",name:"Thibaut Courtois",category:"GK",position:"GK",overall:90},
+  {id:"gk03",name:"Alisson",category:"GK",position:"GK",overall:89},
+  {id:"gk04",name:"Ederson",category:"GK",position:"GK",overall:88},
+  {id:"gk05",name:"Gianluigi Donnarumma",category:"GK",position:"GK",overall:89},
 
-  return root;
+  // DEF
+  {id:"df01",name:"Virgil van Dijk",category:"DEF",position:"CB",overall:90},
+  {id:"df02",name:"Rúben Dias",category:"DEF",position:"CB",overall:89},
+  {id:"df03",name:"William Saliba",category:"DEF",position:"CB",overall:88},
+  {id:"df04",name:"Antonio Rüdiger",category:"DEF",position:"CB",overall:88},
+  {id:"df05",name:"Achraf Hakimi",category:"DEF",position:"RB",overall:88},
+  {id:"df06",name:"Trent Alexander-Arnold",category:"DEF",position:"RB",overall:87},
+  {id:"df07",name:"Alphonso Davies",category:"DEF",position:"LB",overall:87},
+
+  // MID
+  {id:"md01",name:"Kevin De Bruyne",category:"MID",position:"CM",overall:91},
+  {id:"md02",name:"Rodri",category:"MID",position:"CM",overall:91},
+  {id:"md03",name:"Jude Bellingham",category:"MID",position:"CM",overall:90},
+  {id:"md04",name:"Pedri",category:"MID",position:"CM",overall:88},
+  {id:"md05",name:"Luka Modrić",category:"MID",position:"CM",overall:87},
+  {id:"md06",name:"Toni Kroos",category:"MID",position:"CM",overall:87},
+
+  // WING
+  {id:"wg01",name:"Mohamed Salah",category:"WING",position:"RW",overall:90},
+  {id:"wg02",name:"Vinícius Jr.",category:"WING",position:"LW",overall:90},
+  {id:"wg03",name:"Bukayo Saka",category:"WING",position:"RW",overall:87},
+  {id:"wg04",name:"Lamine Yamal",category:"WING",position:"RW",overall:89},
+  {id:"wg05",name:"Rafael Leão",category:"WING",position:"LW",overall:86},
+
+  // ST
+  {id:"st01",name:"Erling Haaland",category:"ST",position:"ST",overall:91},
+  {id:"st02",name:"Kylian Mbappé",category:"ST",position:"ST",overall:91},
+  {id:"st03",name:"Harry Kane",category:"ST",position:"ST",overall:90},
+  {id:"st04",name:"Robert Lewandowski",category:"ST",position:"ST",overall:89},
+  {id:"st05",name:"Victor Osimhen",category:"ST",position:"ST",overall:87}
+
+];
+
+
+/* =========================================
+   ROOT
+========================================= */
+
+const root = document.getElementById("root");
+
+
+/* =========================================
+   HELPERS
+========================================= */
+
+function money(value) {
+  return Number(value || 0).toLocaleString("en-US") + " $";
+}
+
+function show(html) {
+  root.innerHTML = html;
+}
+
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 
-// =====================================
-// BASIC CSS
-// =====================================
-
-const css = document.createElement("style");
-
-css.textContent = `
-
-#root {
-  min-height:100vh;
-  direction:rtl;
-}
-
-.mzad-page {
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  background:
-    radial-gradient(
-      circle at top,
-      #123b63 0%,
-      #07111f 60%
-    );
-  color:white;
-  font-family:Arial,sans-serif;
-}
-
-.mzad-box {
-  width:100%;
-  max-width:520px;
-  text-align:center;
-}
-
-.mzad-logo {
-  font-size:64px;
-  font-weight:900;
-  letter-spacing:5px;
-}
-
-.mzad-subtitle {
-  font-size:22px;
-  opacity:.7;
-  margin-top:5px;
-  margin-bottom:30px;
-}
-
-.mzad-card {
-  background:#101d2e;
-  border:1px solid #26384d;
-  border-radius:20px;
-  padding:25px;
-  margin-bottom:20px;
-}
-
-.mzad-budget-label {
-  opacity:.6;
-}
-
-.mzad-budget {
-  font-size:30px;
-  font-weight:900;
-  margin-top:8px;
-}
-
-.mzad-button {
-  width:100%;
-  border:0;
-  border-radius:15px;
-  padding:18px;
-  background:#19d36b;
-  color:#03130a;
-  font-size:19px;
-  font-weight:900;
-  cursor:pointer;
-}
-
-.mzad-button:active {
-  transform:scale(.98);
-}
-
-.mzad-football {
-  font-size:70px;
-  margin-bottom:15px;
-}
-
-.mzad-muted {
-  color:#9aabbd;
-  line-height:1.8;
-}
-
-.mzad-loader {
-  width:55px;
-  height:55px;
-  border:5px solid #243448;
-  border-top-color:#19d36b;
-  border-radius:50%;
-  margin:25px auto;
-  animation:mzadspin 1s linear infinite;
-}
-
-.mzad-status {
-  color:#19d36b;
-  margin-top:20px;
-  line-height:1.8;
-  word-break:break-word;
-}
-
-.mzad-formations {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-top:25px;
-}
-
-.mzad-formation {
-  background:#101d2e;
-  color:white;
-  border:1px solid #26384d;
-  border-radius:14px;
-  padding:18px 10px;
-  font-size:17px;
-  font-weight:900;
-  cursor:pointer;
-}
-
-.mzad-error {
-  background:#351c25;
-  border:1px solid #713344;
-  border-radius:12px;
-  padding:15px;
-  margin-top:20px;
-  color:#ff9ba9;
-  word-break:break-word;
-}
-
-@keyframes mzadspin {
-  to {
-    transform:rotate(360deg);
-  }
-}
-
-`;
-
-document.head.appendChild(css);
-
-
-// =====================================
-// HOME SCREEN
-// =====================================
+/* =========================================
+   HOME
+========================================= */
 
 function showHome() {
 
-  getRoot().innerHTML = `
+  show(`
+    <div class="app">
+      <div class="home">
 
-    <div class="mzad-page">
+        <div class="home-box">
 
-      <div class="mzad-box">
-
-        <div class="mzad-logo">
-          MZAD
-        </div>
-
-        <div class="mzad-subtitle">
-          مزاد كرة القدم
-        </div>
-
-        <div class="mzad-card">
-
-          <div class="mzad-budget-label">
-            الميزانية
+          <div class="brand">
+            MZAD
           </div>
 
-          <div class="mzad-budget">
-            200,000,000
+          <div class="brand-subtitle">
+            مزاد كرة القدم
           </div>
 
-          <small>
-            فلوس افتراضية
-          </small>
+          <div class="card">
+
+            <h2 class="card-title">
+              جاهز للمزاد؟
+            </h2>
+
+            <p class="card-subtitle">
+              العب ضد لاعب حقيقي أونلاين
+            </p>
+
+            <div class="budget">
+              الميزانية: ${money(myBudget)}
+            </div>
+
+            <br>
+
+            <button class="btn btn-primary" id="findMatchBtn">
+              ابحث عن لاعب
+            </button>
+
+          </div>
 
         </div>
-
-        <button
-          id="startMatch"
-          class="mzad-button"
-        >
-          🎮 ابدأ مباراة
-        </button>
 
       </div>
-
     </div>
-
-  `;
+  `);
 
   document
-    .getElementById("startMatch")
-    .onclick = startMatchmaking;
+    .getElementById("findMatchBtn")
+    .addEventListener("click", startMatchmaking);
 }
 
 
-// =====================================
-// SEARCH SCREEN
-// =====================================
+/* =========================================
+   SEARCHING
+========================================= */
 
-function showSearching(text) {
+function showSearching() {
 
-  getRoot().innerHTML = `
+  show(`
+    <div class="app">
+      <div class="matchmaking">
 
-    <div class="mzad-page">
+        <div class="container">
 
-      <div class="mzad-box">
+          <div class="card">
 
-        <div class="mzad-football">
-          ⚽
-        </div>
+            <div class="loader"></div>
 
-        <h1>
-          بندور على لاعب...
-        </h1>
+            <h2 class="card-title">
+              بندور على لاعب...
+            </h2>
 
-        <div class="mzad-loader"></div>
+            <p class="card-subtitle">
+              جاري البحث عن خصم حقيقي أونلاين
+            </p>
 
-        <div
-          id="mzadStatus"
-          class="mzad-status"
-        >
-          ${text}
+            <div class="budget">
+              الميزانية: ${money(myBudget)}
+            </div>
+
+            <br>
+
+            <button class="btn" id="cancelSearchBtn">
+              إلغاء البحث
+            </button>
+
+          </div>
+
         </div>
 
       </div>
-
     </div>
+  `);
 
-  `;
-
+  document
+    .getElementById("cancelSearchBtn")
+    .addEventListener("click", cancelMatchmaking);
 }
 
 
-// =====================================
-// ERROR SCREEN
-// =====================================
+/* =========================================
+   AUTH
+========================================= */
 
-function showError(error) {
+signInAnonymously(auth)
+  .then(() => {
 
-  console.error(error);
+    onAuthStateChanged(auth, async user => {
 
-  const message =
-    error && error.message
-      ? error.message
-      : String(error);
+      if (!user) return;
 
-  getRoot().innerHTML = `
+      UID = user.uid;
 
-    <div class="mzad-page">
+      await set(ref(db, `players/${UID}`), {
+        uid: UID,
+        budget: 200000000,
+        online: true,
+        updatedAt: Date.now()
+      });
 
-      <div class="mzad-box">
+      onDisconnect(
+        ref(db, `players/${UID}/online`)
+      ).set(false);
 
-        <div class="mzad-football">
-          ⚠️
+      showHome();
+
+    });
+
+  })
+  .catch(error => {
+
+    console.error(error);
+
+    show(`
+      <div class="screen">
+        <div class="container">
+          <div class="card">
+            <h2 class="card-title">
+              حصلت مشكلة
+            </h2>
+
+            <p class="card-subtitle">
+              ${escapeHtml(error.message)}
+            </p>
+
+            <button class="btn btn-primary" onclick="location.reload()">
+              إعادة المحاولة
+            </button>
+          </div>
         </div>
-
-        <h2>
-          حصل خطأ
-        </h2>
-
-        <div class="mzad-error">
-          ${message}
-        </div>
-
-        <br>
-
-        <button
-          class="mzad-button"
-          onclick="location.reload()"
-        >
-          🔄 إعادة المحاولة
-        </button>
-
       </div>
+    `);
 
-    </div>
-
-  `;
-}
+  });
 
 
-// =====================================
-// START MATCHMAKING
-// =====================================
+/* =========================================
+   MATCHMAKING
+========================================= */
 
 async function startMatchmaking() {
 
-  if (!UID) {
-    alert("لسه الاتصال بـ Firebase ما اكتملش.");
-    return;
-  }
-
-  if (searching) {
-    return;
-  }
+  if (!UID || searching) return;
 
   searching = true;
 
-  showSearching(
-    "جاري الاتصال بغرفة الانتظار..."
-  );
+  showSearching();
+
+  const myWaitingRef =
+    ref(db, `matchmaking/waiting/${UID}`);
 
   try {
 
-    // مكان انتظار اللاعب الحالي
+    /*
+      نحاول العثور على لاعب موجود بالفعل.
+    */
 
-    const myWaitingRef = ref(
-      db,
-      "matchmaking/waiting/" + UID
-    );
+    const waitingSnapshot =
+      await get(ref(db, "matchmaking/waiting"));
 
+    let opponentUID = null;
 
-    // كتابة اللاعب في waiting
+    if (waitingSnapshot.exists()) {
 
-    await set(
-      myWaitingRef,
-      {
-        uid: UID,
-        name: "Player",
-        status: "waiting",
-        createdAt: Date.now()
+      const waitingPlayers =
+        waitingSnapshot.val();
+
+      for (const id of Object.keys(waitingPlayers)) {
+
+        if (id !== UID) {
+
+          opponentUID = id;
+          break;
+
+        }
+
       }
-    );
-
-
-    // التأكد أن Firebase كتب البيانات
-
-    const verify = await get(
-      myWaitingRef
-    );
-
-
-    if (!verify.exists()) {
-
-      throw new Error(
-        "Firebase لم يكتب بيانات waiting."
-      );
 
     }
 
 
-    console.log(
-      "WAITING:",
-      verify.val()
-    );
+    /*
+      لو لقينا لاعب:
+      ننشئ المباراة.
+    */
 
+    if (opponentUID) {
 
-    const status =
-      document.getElementById(
-        "mzadStatus"
-      );
+      MATCH_ID =
+        "match_" +
+        Date.now() +
+        "_" +
+        Math.random()
+          .toString(36)
+          .substring(2, 8);
 
+      const matchData = {
 
-    if (status) {
+        status: "formation",
 
-      status.innerHTML =
-        "✅ تم تسجيلك في قائمة الانتظار<br>مستني لاعب تاني...";
+        createdAt: Date.now(),
 
-    }
+        players: {
 
+          [UID]: {
+            uid: UID,
+            budget: 200000000,
+            formation: null,
+            ready: false,
+            squad: {}
+          },
 
-    // إزالة اللاعب عند قطع الاتصال
+          [opponentUID]: {
+            uid: opponentUID,
+            budget: 200000000,
+            formation: null,
+            ready: false,
+            squad: {}
+          }
 
-    onDisconnect(
-      myWaitingRef
-    ).remove();
+        }
 
+      };
 
-    // مراقبة غرفة الانتظار
-
-    watchWaitingRoom();
-
-  }
-
-  catch (error) {
-
-    searching = false;
-
-    showError(error);
-
-  }
-
-}
-
-
-// =====================================
-// WATCH WAITING ROOM
-// =====================================
-
-function watchWaitingRoom() {
-
-  const waitingRef = ref(
-    db,
-    "matchmaking/waiting"
-  );
-
-
-  onValue(
-    waitingRef,
-    snapshot => {
-
-      console.log(
-        "WAITING DATA:",
-        snapshot.val()
-      );
-
-
-      if (!snapshot.exists()) {
-        return;
-      }
-
-
-      const waiting =
-        snapshot.val();
-
-
-      const ids =
-        Object.keys(waiting);
-
-
-      const opponent =
-        ids.find(
-          id => id !== UID
-        );
-
-
-      if (!opponent) {
-        return;
-      }
-
-
-      console.log(
-        "OPPONENT FOUND:",
-        opponent
-      );
-
-
-      createMatch(opponent);
-
-    },
-
-    error => {
-
-      console.error(
-        "WAITING LISTENER ERROR:",
-        error
-      );
-
-      showError(error);
-
-    }
-  );
-
-}
-
-
-// =====================================
-// CREATE MATCH
-// =====================================
-
-async function createMatch(
-  opponentUID
-) {
-
-  if (MATCH_ID) {
-    return;
-  }
-
-
-  const sorted = [
-    UID,
-    opponentUID
-  ].sort();
-
-
-  MATCH_ID =
-    "match_" +
-    sorted[0] +
-    "_" +
-    sorted[1];
-
-
-  try {
-
-    const matchRef = ref(
-      db,
-      "matches/" + MATCH_ID
-    );
-
-
-    const existing =
-      await get(matchRef);
-
-
-    if (!existing.exists()) {
 
       await set(
-        matchRef,
-        {
+        ref(db, `matches/${MATCH_ID}`),
+        matchData
+      );
 
-          matchId: MATCH_ID,
 
-          status: "formation",
+      await remove(
+        ref(db, `matchmaking/waiting/${opponentUID}`)
+      );
 
-          createdAt: Date.now(),
 
-          players: {
+      await remove(myWaitingRef);
 
-            [UID]: {
-              uid: UID,
-              ready: false,
-              formation: null
-            },
+      searching = false;
 
-            [opponentUID]: {
-              uid: opponentUID,
-              ready: false,
-              formation: null
-            }
+      showFormation();
+
+      listenToMatch();
+
+      return;
+
+    }
+
+
+    /*
+      مفيش لاعب:
+      ندخل قائمة الانتظار.
+    */
+
+    await set(myWaitingRef, {
+
+      uid: UID,
+
+      createdAt: Date.now(),
+
+      online: true
+
+    });
+
+
+    /*
+      لو خرج من الصفحة يتم حذف الانتظار.
+    */
+
+    onDisconnect(myWaitingRef).remove();
+
+
+    /*
+      نراقب قائمة الانتظار.
+    */
+
+    if (waitingListener) {
+      waitingListener();
+      waitingListener = null;
+    }
+
+    waitingListener = onValue(
+      ref(db, "matchmaking/waiting"),
+      async snapshot => {
+
+        if (!snapshot.exists()) return;
+
+        const data = snapshot.val();
+
+        let opponentUID = null;
+
+        for (const id of Object.keys(data)) {
+
+          if (id !== UID) {
+
+            opponentUID = id;
+            break;
 
           }
 
         }
-      );
 
-    }
+        if (!opponentUID) return;
+
+        /*
+          نحاول أخذ اللاعب من الانتظار.
+        */
+
+        const opponentRef =
+          ref(db, `matchmaking/waiting/${opponentUID}`);
+
+        const result =
+          await runTransaction(
+            opponentRef,
+            current => {
+
+              if (current === null) {
+                return;
+              }
+
+              return {
+                ...current,
+                matchedBy: UID
+              };
+
+            }
+          );
 
 
-    // إزالة اللاعب الحالي فقط
+        if (!result.committed) return;
 
-    await remove(
-      ref(
-        db,
-        "matchmaking/waiting/" + UID
-      )
+
+        /*
+          نتأكد أن لاعبًا واحدًا فقط
+          ينشئ المباراة.
+        */
+
+        const latest =
+          await get(opponentRef);
+
+        if (!latest.exists()) return;
+
+        const latestData =
+          latest.val();
+
+        if (latestData.matchedBy !== UID) return;
+
+
+        MATCH_ID =
+          "match_" +
+          Date.now() +
+          "_" +
+          Math.random()
+            .toString(36)
+            .substring(2, 8);
+
+
+        await set(
+          ref(db, `matches/${MATCH_ID}`),
+          {
+
+            status: "formation",
+
+            createdAt: Date.now(),
+
+            players: {
+
+              [UID]: {
+                uid: UID,
+                budget: 200000000,
+                formation: null,
+                ready: false,
+                squad: {}
+              },
+
+              [opponentUID]: {
+                uid: opponentUID,
+                budget: 200000000,
+                formation: null,
+                ready: false,
+                squad: {}
+              }
+
+            }
+
+          }
+        );
+
+
+        await remove(myWaitingRef);
+
+        await remove(opponentRef);
+
+        searching = false;
+
+        if (waitingListener) {
+          waitingListener();
+          waitingListener = null;
+        }
+
+        showFormation();
+
+        listenToMatch();
+
+      }
     );
-
-
-    showMatchFound();
 
   }
 
   catch (error) {
 
-    showError(error);
+    console.error(error);
+
+    searching = false;
+
+    show(`
+      <div class="screen">
+        <div class="container">
+          <div class="card">
+
+            <h2 class="card-title">
+              حصلت مشكلة في البحث
+            </h2>
+
+            <p class="card-subtitle">
+              ${escapeHtml(error.message)}
+            </p>
+
+            <button class="btn btn-primary"
+                    onclick="location.reload()">
+              حاول تاني
+            </button>
+
+          </div>
+        </div>
+      </div>
+    `);
 
   }
 
 }
 
 
-// =====================================
-// MATCH FOUND
-// =====================================
+/* =========================================
+   CANCEL SEARCH
+========================================= */
 
-function showMatchFound() {
+async function cancelMatchmaking() {
 
-  getRoot().innerHTML = `
+  searching = false;
 
-    <div class="mzad-page">
+  if (waitingListener) {
 
-      <div class="mzad-box">
+    waitingListener();
 
-        <div class="mzad-football">
-          🎯
-        </div>
+    waitingListener = null;
 
-        <h1>
-          تم العثور على خصم!
-        </h1>
+  }
 
-        <p class="mzad-muted">
-          تم توصيلك بلاعب حقيقي.
-        </p>
+  if (UID) {
 
-        <button
-          id="chooseFormation"
-          class="mzad-button"
-        >
-          اختيار التشكيلة
-        </button>
+    await remove(
+      ref(db, `matchmaking/waiting/${UID}`)
+    );
 
-      </div>
+  }
 
-    </div>
-
-  `;
-
-
-  document
-    .getElementById(
-      "chooseFormation"
-    )
-    .onclick = showFormation;
+  showHome();
 
 }
 
 
-// =====================================
-// FORMATION SCREEN
-// =====================================
+/* =========================================
+   FORMATION SCREEN
+========================================= */
 
 function showFormation() {
 
-  const buttons =
-    formations.map(
-      formation => `
+  show(`
+    <div class="app">
 
-        <button
-          class="mzad-formation"
-          data-formation="${formation}"
-        >
-          ${formation}
-        </button>
+      <div class="screen">
 
-      `
-    ).join("");
+        <div class="container">
+
+          <div class="header">
+
+            <div class="logo">
+              MZAD <span>⚽</span>
+            </div>
+
+            <div class="budget">
+              ${money(myBudget)}
+            </div>
+
+          </div>
 
 
-  getRoot().innerHTML = `
+          <div class="card">
 
-    <div class="mzad-page">
+            <h2 class="card-title">
+              اختار التشكيلة
+            </h2>
 
-      <div class="mzad-box">
+            <p class="card-subtitle">
+              اختار التشكيلة اللي هتلعب بيها المباراة
+            </p>
 
-        <h1>
-          اختر التشكيلة
-        </h1>
 
-        <p class="mzad-muted">
-          اختار التشكيلة اللي هتلعب بيها
-        </p>
+            <div class="formation-grid">
 
-        <div class="mzad-formations">
-          ${buttons}
+              ${formations.map(
+                formation => `
+                  <button
+                    class="formation"
+                    data-formation="${formation}">
+                    ${formation}
+                  </button>
+                `
+              ).join("")}
+
+            </div>
+
+          </div>
+
         </div>
 
       </div>
 
     </div>
-
-  `;
+  `);
 
 
   document
-    .querySelectorAll(
-      ".mzad-formation"
-    )
+    .querySelectorAll(".formation")
     .forEach(button => {
 
-      button.onclick = function() {
+      button.addEventListener(
+        "click",
+        () => {
 
-        chooseFormation(
-          this.dataset.formation
-        );
+          chooseFormation(
+            button.dataset.formation
+          );
 
-      };
+        }
+      );
 
     });
 
 }
 
 
-// =====================================
-// CHOOSE FORMATION
-// =====================================
+/* =========================================
+   CHOOSE FORMATION
+========================================= */
 
-async function chooseFormation(
-  formation
-) {
+async function chooseFormation(formation) {
 
-  try {
+  if (!MATCH_ID || !UID) return;
 
-    await set(
-      ref(
-        db,
-        "matches/" +
-        MATCH_ID +
-        "/players/" +
-        UID
-      ),
-      {
-        uid: UID,
-        ready: true,
-        formation: formation
-      }
-    );
+  myFormation = formation;
 
 
-    getRoot().innerHTML = `
-
-      <div class="mzad-page">
-
-        <div class="mzad-box">
-
-          <div class="mzad-football">
-            ⚽
-          </div>
-
-          <h1>
-            تم اختيار التشكيلة
-          </h1>
-
-          <div class="mzad-status">
-            ${formation}
-          </div>
-
-          <div class="mzad-loader"></div>
-
-          <p class="mzad-muted">
-            مستني الخصم يختار تشكيلته...
-          </p>
-
-        </div>
-
-      </div>
-
-    `;
-
-
-    waitForPlayers();
-
-  }
-
-  catch (error) {
-
-    showError(error);
-
-  }
-
-}
-
-
-// =====================================
-// WAIT FOR BOTH PLAYERS
-// =====================================
-
-function waitForPlayers() {
-
-  const playersRef = ref(
-    db,
-    "matches/" +
-    MATCH_ID +
-    "/players"
-  );
-
-
-  onValue(
-    playersRef,
-    async snapshot => {
-
-      if (!snapshot.exists()) {
-        return;
-      }
-
-
-      const players =
-        snapshot.val();
-
-
-      const ids =
-        Object.keys(players);
-
-
-      if (ids.length !== 2) {
-        return;
-      }
-
-
-      const ready =
-        ids.every(
-          id =>
-            players[id].ready === true
-        );
-
-
-      if (!ready) {
-        return;
-      }
-
-
-      await set(
-        ref(
-          db,
-          "matches/" +
-          MATCH_ID +
-          "/status"
-        ),
-        "auction"
-      );
-
-
-      showAuction();
-
+  await update(
+    ref(db, `matches/${MATCH_ID}/players/${UID}`),
+    {
+      formation: formation,
+      ready: true
     }
   );
 
-}
 
+  show(`
+    <div class="app">
 
-// =====================================
-// AUCTION PLACEHOLDER
-// =====================================
+      <div class="screen">
 
-function showAuction() {
+        <div class="container">
 
-  getRoot().innerHTML = `
+          <div class="card" style="text-align:center">
 
-    <div class="mzad-page">
+            <div class="loader"></div>
 
-      <div class="mzad-box">
+            <h2 class="card-title">
+              تم اختيار ${formation}
+            </h2>
 
-        <div class="mzad-football">
-          🔨
-        </div>
+            <p class="card-subtitle">
+              مستني الخصم يختار تشكيلته...
+            </p>
 
-        <h1>
-          المباراة جاهزة!
-        </h1>
+          </div>
 
-        <p class="mzad-muted">
-          تم تجهيز اللاعبين والتشكيلات.
-        </p>
-
-        <div class="mzad-card">
-          المزاد هيبدأ هنا في الخطوة التالية.
         </div>
 
       </div>
 
     </div>
+  `);
 
-  `;
+
+  waitForPlayers();
 
 }
 
 
-// =====================================
-// FIREBASE AUTH
-// =====================================
+/* =========================================
+   WAIT FOR BOTH PLAYERS
+========================================= */
 
-onAuthStateChanged(
-  auth,
-  async user => {
+function waitForPlayers() {
 
-    if (!user) {
-      return;
-    }
+  if (!MATCH_ID) return;
 
 
-    UID = user.uid;
+  if (matchListener) {
 
+    matchListener();
 
-    console.log(
-      "UID:",
-      UID
-    );
-
-
-    try {
-
-      // كتابة Player
-
-      await set(
-        ref(
-          db,
-          "players/" + UID
-        ),
-        {
-          uid: UID,
-          name: "Player",
-          budget: 200000000,
-          squad: [],
-          online: true,
-          connectedAt: Date.now()
-        }
-      );
-
-
-      console.log(
-        "PLAYER WRITE: OK"
-      );
-
-
-      showHome();
-
-    }
-
-    catch (error) {
-
-      showError(error);
-
-    }
+    matchListener = null;
 
   }
-);
 
 
-// =====================================
-// LOGIN
-// =====================================
+  matchListener = onValue(
+    ref(db, `matches/${MATCH_ID}`),
+    async snapshot => {
 
-signInAnonymously(
-  auth
-).catch(
-  error => {
+      if (!snapshot.exists()) return;
 
-    showError(error);
+      const match = snapshot.val();
+
+
+      const matchPlayers =
+        match.players || {};
+
+
+      const ids =
+        Object.keys(matchPlayers);
+
+
+      if (ids.length !== 2) return;
+
+
+      const allReady =
+        ids.every(
+          id =>
+            matchPlayers[id].ready === true
+        );
+
+
+      if (!allReady) return;
+
+
+      /*
+        نبدأ المزاد.
+      */
+
+      if (match.status !== "auction") {
+
+        await update(
+          ref(db, `matches/${MATCH_ID}`),
+          {
+            status: "auction",
+
+            auction: {
+              active: true,
+              startedAt: Date.now()
+            }
+          }
+        );
+
+      }
+
+
+      showAuction(match);
+
+    }
+  );
+
+}
+
+
+/* =========================================
+   AUCTION
+========================================= */
+
+function showAuction(match) {
+
+  const auction =
+    match.auction || {};
+
+  const currentPlayer =
+    auction.player || players[0];
+
+  const currentBid =
+    auction.currentBid || 1000000;
+
+
+  show(`
+    <div class="app">
+
+      <div class="screen">
+
+        <div class="container">
+
+          <div class="header">
+
+            <div class="logo">
+              MZAD <span>⚽</span>
+            </div>
+
+            <div class="budget">
+              ${money(myBudget)}
+            </div>
+
+          </div>
+
+
+          <div class="auction-layout">
+
+            <div class="card auction-player">
+
+              <div class="player-position">
+                ${currentPlayer.position}
+              </div>
+
+              <div class="player-name">
+                ${escapeHtml(currentPlayer.name)}
+              </div>
+
+              <div class="player-rating">
+                ${currentPlayer.overall}
+              </div>
+
+              <div class="auction-timer">
+                15
+              </div>
+
+              <div class="current-bid">
+                ${money(currentBid)}
+              </div>
+
+              <button
+                class="bid-button"
+                id="bidBtn">
+
+                زايد +1M
+
+              </button>
+
+            </div>
+
+
+            <div class="card">
+
+              <h2 class="card-title">
+                المزاد
+              </h2>
+
+              <p class="card-subtitle">
+                آخر لاعب يزايد قبل انتهاء الوقت يكسب اللاعب.
+              </p>
+
+              <div class="budget">
+                ميزانيتك
+                <br>
+                ${money(myBudget)}
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  `);
+
+
+  const bidBtn =
+    document.getElementById("bidBtn");
+
+
+  bidBtn.addEventListener(
+    "click",
+    () => placeBid(currentBid)
+  );
+
+}
+
+
+/* =========================================
+   PLACE BID
+========================================= */
+
+async function placeBid(currentBid) {
+
+  if (!MATCH_ID || !UID) return;
+
+
+  const newBid =
+    Number(currentBid) + 1000000;
+
+
+  if (newBid > myBudget) {
+
+    alert("الميزانية مش كفاية");
+
+    return;
 
   }
-);
+
+
+  await update(
+    ref(db, `matches/${MATCH_ID}/auction`),
+    {
+      currentBid: newBid,
+      highestBidder: UID,
+      lastBidAt: Date.now()
+    }
+  );
+
+}
+
+
+/* =========================================
+   MATCH LISTENER
+========================================= */
+
+function listenToMatch() {
+
+  if (!MATCH_ID) return;
+
+
+  if (matchListener) {
+
+    matchListener();
+
+    matchListener = null;
+
+  }
+
+
+  matchListener = onValue(
+    ref(db, `matches/${MATCH_ID}`),
+    snapshot => {
+
+      if (!snapshot.exists()) return;
+
+      const match = snapshot.val();
+
+
+      if (match.status === "formation") {
+
+        /*
+          لا نغيّر الشاشة لو اللاعب
+          لسه بيختار تشكيلته.
+        */
+
+        return;
+
+      }
+
+
+      if (match.status === "auction") {
+
+        showAuction(match);
+
+      }
+
+    }
+  );
+
+}
