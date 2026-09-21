@@ -1,5 +1,6 @@
 // ==========================================
 // MZAD - Firebase Connection
+// Football Multiplayer Auction Game
 // ==========================================
 
 import { initializeApp } from
@@ -15,8 +16,7 @@ import {
 import {
   getDatabase,
   ref,
-  set,
-  onValue
+  set
 } from
   "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
 
@@ -26,21 +26,31 @@ import {
 // ==========================================
 
 const firebaseConfig = {
+
   apiKey: "AIzaSyAPEPcsqW4b_UiE9iv3nmC5EufdkJ7-xK0",
-  authDomain: "mzad-game-45174.firebaseapp.com",
 
-  // هنحط الرابط الحقيقي هنا بعد شوية
-  databaseURL: "PUT_YOUR_DATABASE_URL_HERE",
+  authDomain:
+    "mzad-game-45174.firebaseapp.com",
 
-  projectId: "mzad-game-45174",
-  storageBucket: "mzad-game-45174.firebasestorage.app",
-  messagingSenderId: "111631595997",
-  appId: "1:111631595997:web:233d623bf2af5fe51ede34"
+  databaseURL:
+    "https://mzad-game-45174-default-rtdb.firebaseio.com/",
+
+  projectId:
+    "mzad-game-45174",
+
+  storageBucket:
+    "mzad-game-45174.firebasestorage.app",
+
+  messagingSenderId:
+    "111631595997",
+
+  appId:
+    "1:111631595997:web:233d623bf2af5fe51ede34"
 };
 
 
 // ==========================================
-// INITIALIZE FIREBASE
+// START FIREBASE
 // ==========================================
 
 const app = initializeApp(firebaseConfig);
@@ -51,45 +61,66 @@ const database = getDatabase(app);
 
 
 // ==========================================
-// MZAD GAME STATE
+// GAME DATA
 // ==========================================
 
 const MZAD = {
 
   player: {
+
     uid: null,
+
     name: "Player",
+
     budget: 200000000,
+
     squad: []
+
   },
 
   opponent: {
+
     uid: null,
+
     name: "Searching...",
+
     budget: 200000000,
+
     squad: []
+
   },
 
   selectedFormation: null,
 
   formations: [
+
     "4-3-3",
+
     "4-4-2",
+
     "4-2-3-1",
+
     "4-3-1-2",
+
     "3-5-2",
+
     "3-4-3",
+
     "5-3-2",
+
     "5-2-3",
+
     "4-1-4-1",
+
     "4-4-1-1"
+
   ]
 
 };
 
 
 // ==========================================
-// BASIC HELPERS
+// HELPERS
 // ==========================================
 
 function money(value) {
@@ -107,6 +138,10 @@ function getRoot() {
 }
 
 
+// ==========================================
+// SHOW MESSAGE
+// ==========================================
+
 function showMessage(title, message) {
 
   getRoot().innerHTML = `
@@ -119,7 +154,7 @@ function showMessage(title, message) {
       padding:20px;
       background:#07111f;
       color:white;
-      font-family:Arial,sans-serif;
+      font-family:Arial, sans-serif;
       direction:rtl;
     ">
 
@@ -130,16 +165,19 @@ function showMessage(title, message) {
         text-align:center;
         background:#101d2e;
         border-radius:22px;
+        border:1px solid rgba(255,255,255,.08);
       ">
 
         <div style="
-          font-size:48px;
+          font-size:55px;
           margin-bottom:15px;
         ">
           ⚽
         </div>
 
-        <h1>${title}</h1>
+        <h1>
+          ${title}
+        </h1>
 
         <p style="
           opacity:.7;
@@ -158,7 +196,7 @@ function showMessage(title, message) {
 
 
 // ==========================================
-// HOME
+// HOME SCREEN
 // ==========================================
 
 function showHome() {
@@ -179,6 +217,7 @@ function showHome() {
           #07111f 55%
         );
       direction:rtl;
+      font-family:Arial, sans-serif;
     ">
 
       <section style="
@@ -191,6 +230,7 @@ function showHome() {
           font-size:64px;
           font-weight:900;
           letter-spacing:3px;
+          margin-bottom:5px;
         ">
           MZAD
         </div>
@@ -202,6 +242,7 @@ function showHome() {
         ">
           مزاد كرة القدم
         </div>
+
 
         <div style="
           background:rgba(255,255,255,.06);
@@ -236,6 +277,7 @@ function showHome() {
 
         </div>
 
+
         <button
           id="startButton"
           style="
@@ -253,13 +295,16 @@ function showHome() {
           🎮 ابدأ مباراة
         </button>
 
+
         <div style="
           margin-top:18px;
-          font-size:12px;
-          opacity:.4;
+          font-size:11px;
+          opacity:.35;
           direction:ltr;
+          word-break:break-all;
         ">
-          UID: ${MZAD.player.uid || "connecting..."}
+          UID:
+          ${MZAD.player.uid || "connecting..."}
         </div>
 
       </section>
@@ -271,21 +316,87 @@ function showHome() {
 
   document
     .getElementById("startButton")
-    .addEventListener("click", startMatchmaking);
+    .addEventListener(
+      "click",
+      startMatchmaking
+    );
 
 }
 
 
 // ==========================================
-// MATCHMAKING PREVIEW
+// MATCHMAKING
 // ==========================================
 
 function startMatchmaking() {
 
-  showMessage(
-    "جاري البحث...",
-    "بنجهز نظام الـMultiplayer الحقيقي. اتصال Firebase شغال."
-  );
+  getRoot().innerHTML = `
+
+    <main style="
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:#07111f;
+      color:white;
+      direction:rtl;
+      font-family:Arial,sans-serif;
+      text-align:center;
+    ">
+
+      <section>
+
+        <div style="
+          font-size:65px;
+          margin-bottom:20px;
+        ">
+          ⚽
+        </div>
+
+        <h1>
+          بندور على لاعب...
+        </h1>
+
+        <p style="
+          opacity:.6;
+        ">
+          جاري البحث عن خصم حقيقي أونلاين
+        </p>
+
+        <div style="
+          margin:30px auto;
+          width:55px;
+          height:55px;
+          border:5px solid rgba(255,255,255,.12);
+          border-top-color:#19d36b;
+          border-radius:50%;
+          animation:mzadSpin 1s linear infinite;
+        ">
+        </div>
+
+      </section>
+
+    </main>
+
+
+    <style>
+
+      @keyframes mzadSpin {
+
+        from {
+          transform:rotate(0deg);
+        }
+
+        to {
+          transform:rotate(360deg);
+        }
+
+      }
+
+    </style>
+
+  `;
 
 }
 
@@ -300,7 +411,9 @@ async function startFirebase() {
 
     await signInAnonymously(auth);
 
-  } catch (error) {
+  }
+
+  catch (error) {
 
     console.error(
       "Firebase Auth Error:",
@@ -309,7 +422,7 @@ async function startFirebase() {
 
     showMessage(
       "حصل خطأ",
-      "مش قادرين نسجل دخول اللاعب في Firebase. راجع إعداد Anonymous Authentication."
+      "مش قادرين نسجل دخول اللاعب في Firebase. تأكد إن Anonymous Authentication مفعّل."
     );
 
   }
@@ -321,66 +434,90 @@ async function startFirebase() {
 // AUTH STATE
 // ==========================================
 
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(
+  auth,
+  async (user) => {
 
-  if (!user) {
-    return;
-  }
+    if (!user) {
 
-  console.log(
-    "Firebase user connected:",
-    user.uid
-  );
+      return;
 
-  MZAD.player.uid = user.uid;
+    }
 
-  try {
-
-    // اختبار اتصال بسيط بقاعدة البيانات
-    const playerRef = ref(
-      database,
-      "players/" + user.uid
-    );
-
-    await set(playerRef, {
-
-      uid: user.uid,
-
-      name: "Player",
-
-      budget: 200000000,
-
-      connectedAt: Date.now()
-
-    });
 
     console.log(
-      "Realtime Database connection: OK"
+      "Firebase user connected:",
+      user.uid
     );
 
-    showHome();
 
-  } catch (error) {
+    MZAD.player.uid =
+      user.uid;
 
-    console.error(
-      "Realtime Database Error:",
-      error
-    );
 
-    showMessage(
-      "مشكلة في قاعدة البيانات",
-      "Firebase اتصل، لكن Realtime Database محتاجة Database URL أو قواعد أمان صحيحة."
-    );
+    try {
+
+      const playerRef =
+        ref(
+          database,
+          "players/" + user.uid
+        );
+
+
+      await set(
+        playerRef,
+        {
+
+          uid: user.uid,
+
+          name: "Player",
+
+          budget: 200000000,
+
+          squad: [],
+
+          connectedAt:
+            Date.now()
+
+        }
+      );
+
+
+      console.log(
+        "Realtime Database connection: OK"
+      );
+
+
+      showHome();
+
+    }
+
+    catch (error) {
+
+      console.error(
+        "Realtime Database Error:",
+        error
+      );
+
+
+      showMessage(
+        "مشكلة في قاعدة البيانات",
+        "Firebase اتصل، لكن حصلت مشكلة أثناء الكتابة في Realtime Database. افتح Console وشوف الخطأ."
+      );
+
+    }
 
   }
-
-});
+);
 
 
 // ==========================================
-// START
+// START GAME
 // ==========================================
 
-console.log("MZAD starting...");
+console.log(
+  "MZAD starting..."
+);
+
 
 startFirebase();
