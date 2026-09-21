@@ -1,9 +1,3 @@
-// ============================================================
-// MZAD - FOOTBALL AUCTION MULTIPLAYER
-// Complete app.js
-// Fixed formation: 4-3-3
-// ============================================================
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 
 import {
@@ -24,9 +18,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
 
 
-// ============================================================
+// ======================================================
 // FIREBASE
-// ============================================================
+// ======================================================
 
 const firebaseConfig = {
   apiKey: "AIzaSyAPEPcsqW4b_UiE9iv3nmC5EufdkJ7-xK0",
@@ -37,500 +31,261 @@ const firebaseConfig = {
   appId: "1:111631595997:web:233d623bf2af5fe51ede34"
 };
 
-const firebaseApp = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 
-const auth = getAuth(firebaseApp);
+const auth = getAuth(app);
 
 const db = getDatabase(
-  firebaseApp,
+  app,
   "https://mzad-game-45174-default-rtdb.firebaseio.com/"
 );
 
 
-// ============================================================
-// GAME SETTINGS
-// ============================================================
+// ======================================================
+// SETTINGS
+// ======================================================
+
+const FORMATION = "4-3-3";
 
 const STARTING_BUDGET = 200000000;
 
-const FIXED_FORMATION = "4-3-3";
-
-const AUCTION_TIME = 15;
+const AUCTION_SECONDS = 15;
 
 const BID_INCREMENT = 1000000;
 
 
-// ============================================================
+// ======================================================
 // PLAYERS
-// ============================================================
+// ======================================================
 
 const PLAYERS = [
 
-  // GK
-  {
-    id: "gk_001",
-    name: "Manuel Neuer",
-    position: "GK",
-    rating: 89,
-    category: "GK"
-  },
-  {
-    id: "gk_002",
-    name: "Alisson",
-    position: "GK",
-    rating: 89,
-    category: "GK"
-  },
-  {
-    id: "gk_003",
-    name: "Thibaut Courtois",
-    position: "GK",
-    rating: 90,
-    category: "GK"
-  },
-  {
-    id: "gk_004",
-    name: "Ederson",
-    position: "GK",
-    rating: 88,
-    category: "GK"
-  },
-  {
-    id: "gk_005",
-    name: "Donnarumma",
-    position: "GK",
-    rating: 89,
-    category: "GK"
-  },
+  { id:"gk1", name:"Alisson", pos:"GK", rating:89, cat:"GK" },
+  { id:"gk2", name:"Courtois", pos:"GK", rating:90, cat:"GK" },
+  { id:"gk3", name:"Neuer", pos:"GK", rating:89, cat:"GK" },
 
-  // DEF
-  {
-    id: "def_001",
-    name: "Virgil van Dijk",
-    position: "DEF",
-    rating: 90,
-    category: "DEF"
-  },
-  {
-    id: "def_002",
-    name: "Rúben Dias",
-    position: "DEF",
-    rating: 89,
-    category: "DEF"
-  },
-  {
-    id: "def_003",
-    name: "Antonio Rüdiger",
-    position: "DEF",
-    rating: 88,
-    category: "DEF"
-  },
-  {
-    id: "def_004",
-    name: "William Saliba",
-    position: "DEF",
-    rating: 87,
-    category: "DEF"
-  },
-  {
-    id: "def_005",
-    name: "Trent Alexander-Arnold",
-    position: "DEF",
-    rating: 86,
-    category: "DEF"
-  },
-  {
-    id: "def_006",
-    name: "Achraf Hakimi",
-    position: "DEF",
-    rating: 88,
-    category: "DEF"
-  },
-  {
-    id: "def_007",
-    name: "Theo Hernández",
-    position: "DEF",
-    rating: 87,
-    category: "DEF"
-  },
+  { id:"d1", name:"Van Dijk", pos:"DEF", rating:90, cat:"DEF" },
+  { id:"d2", name:"Rúben Dias", pos:"DEF", rating:89, cat:"DEF" },
+  { id:"d3", name:"Rüdiger", pos:"DEF", rating:88, cat:"DEF" },
+  { id:"d4", name:"Hakimi", pos:"DEF", rating:88, cat:"DEF" },
+  { id:"d5", name:"Theo Hernández", pos:"DEF", rating:87, cat:"DEF" },
 
-  // MID
-  {
-    id: "mid_001",
-    name: "Kevin De Bruyne",
-    position: "MID",
-    rating: 91,
-    category: "MID"
-  },
-  {
-    id: "mid_002",
-    name: "Rodri",
-    position: "MID",
-    rating: 91,
-    category: "MID"
-  },
-  {
-    id: "mid_003",
-    name: "Jude Bellingham",
-    position: "MID",
-    rating: 90,
-    category: "MID"
-  },
-  {
-    id: "mid_004",
-    name: "Pedri",
-    position: "MID",
-    rating: 87,
-    category: "MID"
-  },
-  {
-    id: "mid_005",
-    name: "Luka Modrić",
-    position: "MID",
-    rating: 88,
-    category: "MID"
-  },
-  {
-    id: "mid_006",
-    name: "Toni Kroos",
-    position: "MID",
-    rating: 88,
-    category: "MID"
-  },
+  { id:"m1", name:"Rodri", pos:"MID", rating:91, cat:"MID" },
+  { id:"m2", name:"De Bruyne", pos:"MID", rating:91, cat:"MID" },
+  { id:"m3", name:"Bellingham", pos:"MID", rating:90, cat:"MID" },
+  { id:"m4", name:"Modrić", pos:"MID", rating:88, cat:"MID" },
+  { id:"m5", name:"Pedri", pos:"MID", rating:87, cat:"MID" },
 
-  // WING
-  {
-    id: "wing_001",
-    name: "Mohamed Salah",
-    position: "WING",
-    rating: 90,
-    category: "WING"
-  },
-  {
-    id: "wing_002",
-    name: "Vinícius Jr.",
-    position: "WING",
-    rating: 90,
-    category: "WING"
-  },
-  {
-    id: "wing_003",
-    name: "Bukayo Saka",
-    position: "WING",
-    rating: 87,
-    category: "WING"
-  },
-  {
-    id: "wing_004",
-    name: "Lamine Yamal",
-    position: "WING",
-    rating: 86,
-    category: "WING"
-  },
-  {
-    id: "wing_005",
-    name: "Son Heung-min",
-    position: "WING",
-    rating: 88,
-    category: "WING"
-  },
+  { id:"w1", name:"Salah", pos:"WING", rating:90, cat:"WING" },
+  { id:"w2", name:"Vinícius Jr.", pos:"WING", rating:90, cat:"WING" },
+  { id:"w3", name:"Saka", pos:"WING", rating:87, cat:"WING" },
+  { id:"w4", name:"Son", pos:"WING", rating:88, cat:"WING" },
 
-  // ST
-  {
-    id: "st_001",
-    name: "Erling Haaland",
-    position: "ST",
-    rating: 91,
-    category: "ST"
-  },
-  {
-    id: "st_002",
-    name: "Kylian Mbappé",
-    position: "ST",
-    rating: 91,
-    category: "ST"
-  },
-  {
-    id: "st_003",
-    name: "Harry Kane",
-    position: "ST",
-    rating: 90,
-    category: "ST"
-  },
-  {
-    id: "st_004",
-    name: "Robert Lewandowski",
-    position: "ST",
-    rating: 89,
-    category: "ST"
-  },
-  {
-    id: "st_005",
-    name: "Victor Osimhen",
-    position: "ST",
-    rating: 88,
-    category: "ST"
-  }
+  { id:"s1", name:"Haaland", pos:"ST", rating:91, cat:"ST" },
+  { id:"s2", name:"Mbappé", pos:"ST", rating:91, cat:"ST" },
+  { id:"s3", name:"Kane", pos:"ST", rating:90, cat:"ST" },
+  { id:"s4", name:"Lewandowski", pos:"ST", rating:89, cat:"ST" }
 
 ];
 
 
-// ============================================================
+// ======================================================
 // STATE
-// ============================================================
+// ======================================================
 
-let currentUser = null;
+let user = null;
 
-let currentMatchId = null;
+let matchId = null;
 
-let currentMatch = null;
+let match = null;
 
-let matchListener = null;
+let unsubscribeMatch = null;
 
-let waitingListener = null;
+let unsubscribeWaiting = null;
 
-let timerInterval = null;
+let timer = null;
 
-let isSearching = false;
-
-let isAuctionFinished = false;
+let finishing = false;
 
 
-// ============================================================
+// ======================================================
 // ROOT
-// ============================================================
+// ======================================================
 
 const root = document.getElementById("root");
 
 
-// ============================================================
-// HELPERS
-// ============================================================
+// ======================================================
+// BASIC UI
+// ======================================================
 
-function money(value) {
+function appHTML(content) {
 
-  return Number(value || 0).toLocaleString("en-US");
-
-}
-
-
-function escapeHTML(text) {
-
-  return String(text ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-
-}
-
-
-function getPlayer(id) {
-
-  return PLAYERS.find(p => p.id === id);
-
-}
-
-
-function getMyPlayerData() {
-
-  if (!currentMatch || !currentUser) return null;
-
-  return currentMatch.players?.[currentUser.uid] || null;
-
-}
-
-
-function getOpponentData() {
-
-  if (!currentMatch || !currentUser) return null;
-
-  const ids = Object.keys(currentMatch.players || {});
-
-  const opponentId = ids.find(id => id !== currentUser.uid);
-
-  if (!opponentId) return null;
-
-  return currentMatch.players[opponentId];
-
-}
-
-
-function getOpponentId() {
-
-  if (!currentMatch || !currentUser) return null;
-
-  const ids = Object.keys(currentMatch.players || {});
-
-  return ids.find(id => id !== currentUser.uid) || null;
-
-}
-
-
-function showError(message) {
-
-  root.innerHTML = `
+  return `
     <div class="app">
       <section class="screen">
         <div class="container">
-          <div class="card">
-            <h2>حدث خطأ</h2>
-            <p>${escapeHTML(message)}</p>
-            <button class="btn btn-primary" id="retryBtn">
-              إعادة المحاولة
-            </button>
-          </div>
+          ${content}
         </div>
       </section>
     </div>
   `;
 
-  document.getElementById("retryBtn")?.addEventListener("click", () => {
-    showHome();
-  });
+}
+
+
+function money(number) {
+
+  return Number(number || 0)
+    .toLocaleString("en-US");
 
 }
 
 
-// ============================================================
-// HOME
-// ============================================================
+function playerById(id) {
 
-function showHome() {
+  return PLAYERS.find(
+    player => player.id === id
+  );
+
+}
+
+
+// ======================================================
+// HOME
+// ======================================================
+
+function home() {
 
   stopTimer();
 
-  isSearching = false;
+  root.innerHTML = appHTML(`
 
-  isAuctionFinished = false;
+    <div class="home-box">
 
-  currentMatchId = null;
+      <div class="brand">
 
-  currentMatch = null;
+        <div class="logo">
+          MZAD
+        </div>
 
-  root.innerHTML = `
-    <div class="app">
+        <div class="brand-subtitle">
+          مزاد كرة القدم
+        </div>
 
-      <section class="screen home">
+      </div>
 
-        <div class="container">
+      <div class="card">
 
-          <div class="home-box">
+        <h2>
+          ⚽ MZAD
+        </h2>
 
-            <div class="brand">
+        <p>
+          العب مزاد كرة القدم ضد لاعب حقيقي أونلاين
+        </p>
 
-              <div class="logo">
-                MZAD
-              </div>
+        <div class="budget">
 
-              <div class="brand-subtitle">
-                مزاد كرة القدم
-              </div>
+          الميزانية
 
-            </div>
-
-            <div class="card">
-
-              <h2>
-                مزاد كرة القدم Multiplayer
-              </h2>
-
-              <p>
-                العب ضد لاعب حقيقي أونلاين
-              </p>
-
-              <div class="budget">
-                ميزانيتك
-                <strong>
-                  ${money(STARTING_BUDGET)}
-                </strong>
-              </div>
-
-              <div style="margin-top:20px">
-
-                <div style="
-                  padding:14px;
-                  border-radius:12px;
-                  background:rgba(255,255,255,.04);
-                  margin-bottom:14px;
-                ">
-                  التشكيل تلقائي
-                  <strong style="display:block;margin-top:5px">
-                    4-3-3
-                  </strong>
-                </div>
-
-                <button
-                  id="startBtn"
-                  class="btn btn-primary"
-                  style="width:100%"
-                >
-                  ابدأ مباراة
-                </button>
-
-              </div>
-
-            </div>
-
-          </div>
+          <strong>
+            ${money(STARTING_BUDGET)}
+          </strong>
 
         </div>
 
-      </section>
+        <div style="
+          margin-top:18px;
+          padding:15px;
+          background:rgba(255,255,255,.05);
+          border-radius:12px;
+          text-align:center;
+        ">
+
+          التشكيل التلقائي
+
+          <strong style="
+            display:block;
+            margin-top:5px;
+            font-size:22px;
+          ">
+            4-3-3
+          </strong>
+
+        </div>
+
+        <button
+          id="start"
+          class="btn btn-primary"
+          style="width:100%;margin-top:20px"
+        >
+          ابدأ مباراة
+        </button>
+
+      </div>
 
     </div>
-  `;
+
+  `);
 
   document
-    .getElementById("startBtn")
-    ?.addEventListener("click", startMatchmaking);
+    .getElementById("start")
+    ?.addEventListener(
+      "click",
+      startSearching
+    );
 
 }
 
 
-// ============================================================
-// MATCHMAKING
-// ============================================================
+// ======================================================
+// SEARCHING
+// ======================================================
 
-async function startMatchmaking() {
+async function startSearching() {
 
-  if (!currentUser) return;
+  if (!user) {
 
-  if (isSearching) return;
+    alert("لسه بنسجل دخولك، حاول مرة ثانية.");
 
-  isSearching = true;
+    return;
+
+  }
 
   showSearching();
 
-  const uid = currentUser.uid;
-
-  const waitingRef = ref(
-    db,
-    `matchmaking/waiting/${uid}`
-  );
+  const myWaitingRef =
+    ref(
+      db,
+      `matchmaking/waiting/${user.uid}`
+    );
 
   try {
 
-    await set(waitingRef, {
-      uid: uid,
-      createdAt: Date.now(),
-      formation: FIXED_FORMATION
-    });
+    await set(
+      myWaitingRef,
+      {
+        uid:user.uid,
+        createdAt:Date.now()
+      }
+    );
 
-    onDisconnect(waitingRef).remove();
+    await onDisconnect(
+      myWaitingRef
+    ).remove();
 
-    listenForOpponent();
+    findOpponent();
 
-  } catch (error) {
+  } catch(error) {
 
     console.error(error);
 
-    isSearching = false;
-
-    showError(
-      "تعذر الاتصال بقاعدة البيانات."
+    alert(
+      "حصل خطأ في الاتصال بـ Firebase."
     );
+
+    home();
 
   }
 
@@ -539,450 +294,383 @@ async function startMatchmaking() {
 
 function showSearching() {
 
-  root.innerHTML = `
-    <div class="app">
+  root.innerHTML = appHTML(`
 
-      <section class="screen">
+    <div class="card" style="
+      text-align:center;
+      margin-top:50px;
+    ">
 
-        <div class="container">
+      <div class="loader"></div>
 
-          <div class="header">
+      <h2>
+        بندور على لاعب...
+      </h2>
 
-            <div class="logo">
-              MZAD
-            </div>
+      <p>
+        جاري البحث عن خصم حقيقي أونلاين
+      </p>
 
-            <div class="budget">
-              ${money(STARTING_BUDGET)}
-            </div>
+      <p>
+        التشكيل:
+        <strong>4-3-3</strong>
+      </p>
 
-          </div>
-
-          <div class="matchmaking">
-
-            <div class="card">
-
-              <div class="loader"></div>
-
-              <h2>
-                بنـدور على لاعب...
-              </h2>
-
-              <p>
-                جاري البحث عن خصم حقيقي أونلاين
-              </p>
-
-              <p style="margin-top:20px">
-                التشكيل:
-                <strong>4-3-3</strong>
-              </p>
-
-              <button
-                id="cancelSearch"
-                class="btn"
-                style="margin-top:20px"
-              >
-                إلغاء
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
+      <button
+        id="cancel"
+        class="btn"
+        style="margin-top:20px"
+      >
+        إلغاء البحث
+      </button>
 
     </div>
-  `;
+
+  `);
 
   document
-    .getElementById("cancelSearch")
-    ?.addEventListener("click", cancelMatchmaking);
+    .getElementById("cancel")
+    ?.addEventListener(
+      "click",
+      cancelSearching
+    );
 
 }
 
 
-async function cancelMatchmaking() {
+async function cancelSearching() {
 
-  if (!currentUser) return;
+  if (unsubscribeWaiting) {
 
-  isSearching = false;
+    unsubscribeWaiting();
 
-  if (waitingListener) {
-
-    waitingListener();
-
-    waitingListener = null;
+    unsubscribeWaiting = null;
 
   }
 
-  try {
+  if (user) {
 
     await remove(
       ref(
         db,
-        `matchmaking/waiting/${currentUser.uid}`
+        `matchmaking/waiting/${user.uid}`
       )
     );
 
-  } catch (error) {
-
-    console.error(error);
-
   }
 
-  showHome();
+  home();
 
 }
 
 
-// ============================================================
+// ======================================================
 // FIND OPPONENT
-// ============================================================
+// ======================================================
 
-function listenForOpponent() {
+function findOpponent() {
 
-  if (waitingListener) {
+  const waitingRef =
+    ref(
+      db,
+      "matchmaking/waiting"
+    );
 
-    waitingListener();
+  if (unsubscribeWaiting) {
 
-    waitingListener = null;
+    unsubscribeWaiting();
 
   }
 
-  const waitingRef = ref(
-    db,
-    "matchmaking/waiting"
-  );
+  unsubscribeWaiting =
+    onValue(
+      waitingRef,
+      async snapshot => {
 
-  waitingListener = onValue(
-    waitingRef,
-    async snapshot => {
+        const data =
+          snapshot.val();
 
-      if (!isSearching) return;
+        if (!data) return;
 
-      const data = snapshot.val();
+        const waitingPlayers =
+          Object.values(data)
+            .filter(
+              p =>
+                p &&
+                p.uid &&
+                p.uid !== user.uid
+            )
+            .sort(
+              (a,b) =>
+                Number(a.createdAt || 0) -
+                Number(b.createdAt || 0)
+            );
 
-      if (!data) return;
-
-      const players = Object.values(data)
-
-        .filter(player =>
-          player &&
-          player.uid &&
-          player.uid !== currentUser.uid
-        )
-
-        .sort(
-          (a, b) =>
-            Number(a.createdAt || 0) -
-            Number(b.createdAt || 0)
-        );
-
-      if (players.length === 0) return;
-
-      const opponent = players[0];
-
-      const ids = [
-        currentUser.uid,
-        opponent.uid
-      ].sort();
-
-      const playerA = ids[0];
-
-      const playerB = ids[1];
-
-      const matchId =
-        `match_${playerA}_${playerB}`;
-
-      const matchRef = ref(
-        db,
-        `matches/${matchId}`
-      );
-
-      const existing = await get(matchRef);
-
-      if (!existing.exists()) {
-
-        if (currentUser.uid !== playerA) {
+        if (
+          waitingPlayers.length === 0
+        ) {
 
           return;
 
         }
 
-        await createMatch(
-          matchId,
-          playerA,
-          playerB
+        const opponent =
+          waitingPlayers[0];
+
+        const ids = [
+          user.uid,
+          opponent.uid
+        ].sort();
+
+        const firstPlayer =
+          ids[0];
+
+        const secondPlayer =
+          ids[1];
+
+        const newMatchId =
+          `match_${firstPlayer}_${secondPlayer}`;
+
+        const matchRef =
+          ref(
+            db,
+            `matches/${newMatchId}`
+          );
+
+        const existing =
+          await get(matchRef);
+
+        if (!existing.exists()) {
+
+          if (
+            user.uid !== firstPlayer
+          ) {
+
+            return;
+
+          }
+
+          await createMatch(
+            newMatchId,
+            firstPlayer,
+            secondPlayer
+          );
+
+        }
+
+        await remove(
+          ref(
+            db,
+            `matchmaking/waiting/${firstPlayer}`
+          )
+        );
+
+        await remove(
+          ref(
+            db,
+            `matchmaking/waiting/${secondPlayer}`
+          )
+        );
+
+        enterMatch(
+          newMatchId
         );
 
       }
-
-      await remove(
-        ref(
-          db,
-          `matchmaking/waiting/${playerA}`
-        )
-      );
-
-      await remove(
-        ref(
-          db,
-          `matchmaking/waiting/${playerB}`
-        )
-      );
-
-      openMatch(
-        matchId
-      );
-
-    }
-  );
+    );
 
 }
 
 
-// ============================================================
+// ======================================================
 // CREATE MATCH
-// ============================================================
+// ======================================================
 
 async function createMatch(
-  matchId,
+  id,
   playerA,
   playerB
 ) {
 
-  const matchRef = ref(
-    db,
-    `matches/${matchId}`
-  );
-
-  const randomPlayer =
+  const firstPlayer =
     PLAYERS[
       Math.floor(
-        Math.random() * PLAYERS.length
+        Math.random() *
+        PLAYERS.length
       )
     ];
 
-  const now = Date.now();
-
   const matchData = {
 
-    id: matchId,
+    status:"match_found",
 
-    status: "match_found",
+    formation:FORMATION,
 
-    createdAt: now,
+    createdAt:Date.now(),
 
-    formation: FIXED_FORMATION,
+    players:{
 
-    players: {
+      [playerA]:{
 
-      [playerA]: {
+        uid:playerA,
 
-        uid: playerA,
+        budget:STARTING_BUDGET,
 
-        budget: STARTING_BUDGET,
+        squad:[],
 
-        squad: [],
-
-        ready: true,
-
-        formation: FIXED_FORMATION
+        formation:FORMATION
 
       },
 
-      [playerB]: {
+      [playerB]:{
 
-        uid: playerB,
+        uid:playerB,
 
-        budget: STARTING_BUDGET,
+        budget:STARTING_BUDGET,
 
-        squad: [],
+        squad:[],
 
-        ready: true,
-
-        formation: FIXED_FORMATION
+        formation:FORMATION
 
       }
 
     },
 
-    auction: {
+    auction:{
 
-      playerId: randomPlayer.id,
+      playerId:firstPlayer.id,
 
-      currentBid: 0,
+      currentBid:0,
 
-      highestBidder: null,
+      highestBidder:null,
 
-      endsAt: 0,
+      endsAt:0,
 
-      round: 1,
+      finished:false,
 
-      finished: false
+      round:1
 
     }
 
   };
 
   await set(
-    matchRef,
+    ref(
+      db,
+      `matches/${id}`
+    ),
     matchData
   );
 
 }
 
 
-// ============================================================
-// OPEN MATCH
-// ============================================================
+// ======================================================
+// ENTER MATCH
+// ======================================================
 
-function openMatch(matchId) {
+function enterMatch(id) {
 
-  if (!currentUser) return;
+  matchId = id;
 
-  isSearching = false;
+  showFound();
 
-  currentMatchId = matchId;
+  if (unsubscribeMatch) {
 
-  if (waitingListener) {
-
-    waitingListener();
-
-    waitingListener = null;
+    unsubscribeMatch();
 
   }
 
-  showMatchFound();
+  unsubscribeMatch =
+    onValue(
+      ref(
+        db,
+        `matches/${id}`
+      ),
+      snapshot => {
 
-  const matchRef = ref(
-    db,
-    `matches/${matchId}`
-  );
+        if (!snapshot.exists()) {
 
-  if (matchListener) {
+          home();
 
-    matchListener();
-
-    matchListener = null;
-
-  }
-
-  matchListener = onValue(
-    matchRef,
-    snapshot => {
-
-      if (!snapshot.exists()) {
-
-        showHome();
-
-        return;
-
-      }
-
-      currentMatch =
-        snapshot.val();
-
-      handleMatchUpdate();
-
-    }
-  );
-
-}
-
-
-// ============================================================
-// MATCH FOUND
-// ============================================================
-
-function showMatchFound() {
-
-  root.innerHTML = `
-    <div class="app">
-
-      <section class="screen">
-
-        <div class="container">
-
-          <div class="card">
-
-            <div style="
-              font-size:48px;
-              text-align:center;
-              margin-bottom:10px;
-            ">
-              ⚽
-            </div>
-
-            <h2 style="text-align:center">
-              تم العثور على خصم!
-            </h2>
-
-            <p style="text-align:center">
-              جاري تجهيز المباراة...
-            </p>
-
-            <div style="
-              margin-top:20px;
-              text-align:center;
-            ">
-
-              <div class="budget">
-                التشكيل
-                <strong>
-                  4-3-3
-                </strong>
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
-
-    </div>
-  `;
-
-}
-
-
-// ============================================================
-// MATCH STATE
-// ============================================================
-
-function handleMatchUpdate() {
-
-  if (!currentMatch) return;
-
-  if (currentMatch.status === "match_found") {
-
-    showMatchFound();
-
-    setTimeout(
-      () => {
-
-        if (
-          currentMatch &&
-          currentMatch.status === "match_found"
-        ) {
-
-          startAuction();
+          return;
 
         }
 
-      },
-      1200
+        match =
+          snapshot.val();
+
+        processMatch();
+
+      }
+    );
+
+}
+
+
+function showFound() {
+
+  root.innerHTML = appHTML(`
+
+    <div class="card" style="
+      text-align:center;
+      margin-top:50px;
+    ">
+
+      <div style="
+        font-size:60px;
+      ">
+        ⚽
+      </div>
+
+      <h2>
+        تم العثور على خصم!
+      </h2>
+
+      <p>
+        جاري تجهيز المباراة...
+      </p>
+
+      <div class="budget">
+        التشكيل
+        <strong>
+          4-3-3
+        </strong>
+      </div>
+
+    </div>
+
+  `);
+
+}
+
+
+// ======================================================
+// PROCESS MATCH
+// ======================================================
+
+async function processMatch() {
+
+  if (!match) return;
+
+  if (
+    match.status ===
+    "match_found"
+  ) {
+
+    setTimeout(
+      startAuction,
+      1000
     );
 
     return;
 
   }
 
-  if (currentMatch.status === "auction") {
+  if (
+    match.status ===
+    "auction"
+  ) {
 
     showAuction();
 
@@ -990,82 +678,67 @@ function handleMatchUpdate() {
 
   }
 
-  if (currentMatch.status === "finished") {
+  if (
+    match.status ===
+    "finished"
+  ) {
 
-    showFinalResult();
-
-    return;
+    showResult();
 
   }
 
 }
 
 
-// ============================================================
+// ======================================================
 // START AUCTION
-// ============================================================
+// ======================================================
 
 async function startAuction() {
 
-  if (!currentMatchId) return;
-
-  const matchRef = ref(
-    db,
-    `matches/${currentMatchId}`
-  );
+  const matchRef =
+    ref(
+      db,
+      `matches/${matchId}`
+    );
 
   const snapshot =
     await get(matchRef);
 
   if (!snapshot.exists()) return;
 
-  const match =
+  const data =
     snapshot.val();
 
   if (
-    match.status === "auction"
+    data.status ===
+    "auction"
   ) {
 
     return;
 
   }
 
-  if (match.auction?.finished) {
-
-    return;
-
-  }
-
-  const playerId =
-    match.auction?.playerId ||
-    PLAYERS[
-      Math.floor(
-        Math.random() * PLAYERS.length
-      )
-    ].id;
-
-  const endsAt =
-    Date.now() + AUCTION_TIME * 1000;
+  const end =
+    Date.now() +
+    AUCTION_SECONDS * 1000;
 
   await update(
     matchRef,
     {
 
-      status: "auction",
+      status:"auction",
 
-      formation: FIXED_FORMATION,
+      formation:FORMATION,
 
-      "auction/playerId":
-        playerId,
+      "auction/endsAt":
+        end,
 
       "auction/currentBid":
         0,
 
       "auction/highestBidder":
         null,
-
-      "auction/endsAt":
-        endsAt,
 
       "auction/finished":
         false
@@ -1076,338 +749,266 @@ async function startAuction() {
 }
 
 
-// ============================================================
-// AUCTION UI
-// ============================================================
+// ======================================================
+// AUCTION
+// ======================================================
 
 function showAuction() {
 
-  if (!currentMatch) return;
+  stopTimer();
 
   const auction =
-    currentMatch.auction;
+    match.auction;
 
   const player =
-    getPlayer(
-      auction?.playerId
+    playerById(
+      auction.playerId
     );
 
-  if (!player) {
+  if (!player) return;
 
-    return;
+  const me =
+    match.players[user.uid];
 
-  }
+  const opponentId =
+    Object.keys(
+      match.players
+    ).find(
+      id =>
+        id !== user.uid
+    );
 
-  const myData =
-    getMyPlayerData();
+  const opponent =
+    match.players[opponentId];
 
-  const opponentData =
-    getOpponentData();
-
-  const currentBid =
+  const bid =
     Number(
       auction.currentBid || 0
     );
 
-  const myBudget =
-    Number(
-      myData?.budget ||
-      STARTING_BUDGET
-    );
-
-  const opponentBudget =
-    Number(
-      opponentData?.budget ||
-      STARTING_BUDGET
-    );
+  const nextBid =
+    bid + BID_INCREMENT;
 
   const canBid =
-    currentBid + BID_INCREMENT <=
-    myBudget;
+    nextBid <=
+    Number(me.budget || 0);
 
-  const highestBidder =
-    auction.highestBidder;
+  root.innerHTML = appHTML(`
 
-  let bidderText =
-    "لا يوجد مزايد حتى الآن";
+    <div class="header">
 
-  if (highestBidder) {
+      <div class="logo">
+        MZAD
+      </div>
 
-    if (
-      highestBidder ===
-      currentUser.uid
-    ) {
-
-      bidderText =
-        "أنت صاحب أعلى مزايدة";
-
-    } else {
-
-      bidderText =
-        "الخصم صاحب أعلى مزايدة";
-
-    }
-
-  }
-
-  root.innerHTML = `
-    <div class="app">
-
-      <section class="screen">
-
-        <div class="container">
-
-          <div class="header">
-
-            <div class="logo">
-              MZAD
-            </div>
-
-            <div class="budget">
-              💰 ${money(myBudget)}
-            </div>
-
-          </div>
-
-
-          <div class="auction-layout">
-
-
-            <div class="card auction-player">
-
-              <div class="player-position">
-                ${escapeHTML(player.position)}
-              </div>
-
-              <div class="player-name">
-                ${escapeHTML(player.name)}
-              </div>
-
-              <div class="player-rating">
-                ${player.rating}
-              </div>
-
-              <div style="
-                margin-top:8px;
-                color:#91a2b5;
-              ">
-                ${escapeHTML(player.category)}
-              </div>
-
-            </div>
-
-
-            <div class="card">
-
-              <div class="auction-timer">
-
-                <span id="timer">
-                  ${getRemainingSeconds(
-                    auction.endsAt
-                  )}
-                </span>
-
-              </div>
-
-
-              <div class="current-bid">
-
-                <small>
-                  أعلى مزايدة
-                </small>
-
-                <strong>
-                  ${money(currentBid)}
-                </strong>
-
-              </div>
-
-
-              <p style="
-                text-align:center;
-                color:#91a2b5;
-              ">
-                ${escapeHTML(bidderText)}
-              </p>
-
-
-              <button
-                id="bidBtn"
-                class="btn btn-primary bid-button"
-                ${canBid ? "" : "disabled"}
-              >
-                زايد +${money(BID_INCREMENT)}
-              </button>
-
-
-              <div style="
-                display:grid;
-                grid-template-columns:1fr 1fr;
-                gap:10px;
-                margin-top:15px;
-              ">
-
-                <div class="card">
-
-                  <small>
-                    ميزانيتك
-                  </small>
-
-                  <strong>
-                    ${money(myBudget)}
-                  </strong>
-
-                </div>
-
-
-                <div class="card">
-
-                  <small>
-                    ميزانية الخصم
-                  </small>
-
-                  <strong>
-                    ${money(opponentBudget)}
-                  </strong>
-
-                </div>
-
-              </div>
-
-            </div>
-
-
-            <div class="card">
-
-              <h3>
-                التشكيل
-              </h3>
-
-              <div class="pitch">
-
-                <div class="player-token">
-                  ST
-                </div>
-
-                <div style="
-                  display:flex;
-                  justify-content:center;
-                  gap:20px;
-                  flex-wrap:wrap;
-                ">
-
-                  <div class="player-token">
-                    LW
-                  </div>
-
-                  <div class="player-token">
-                    RW
-                  </div>
-
-                </div>
-
-                <div style="
-                  display:flex;
-                  justify-content:center;
-                  gap:15px;
-                  margin-top:20px;
-                  flex-wrap:wrap;
-                ">
-
-                  <div class="player-token">
-                    CM
-                  </div>
-
-                  <div class="player-token">
-                    CM
-                  </div>
-
-                  <div class="player-token">
-                    CM
-                  </div>
-
-                </div>
-
-                <div style="
-                  display:flex;
-                  justify-content:center;
-                  gap:15px;
-                  margin-top:20px;
-                  flex-wrap:wrap;
-                ">
-
-                  <div class="player-token">
-                    LB
-                  </div>
-
-                  <div class="player-token">
-                    CB
-                  </div>
-
-                  <div class="player-token">
-                    CB
-                  </div>
-
-                  <div class="player-token">
-                    RB
-                  </div>
-
-                </div>
-
-                <div style="
-                  display:flex;
-                  justify-content:center;
-                  margin-top:20px;
-                ">
-
-                  <div class="player-token">
-                    GK
-                  </div>
-
-                </div>
-
-              </div>
-
-            </div>
-
-
-          </div>
-
-        </div>
-
-      </section>
+      <div class="budget">
+        💰 ${money(me.budget)}
+      </div>
 
     </div>
-  `;
 
+
+    <div class="card auction-player">
+
+      <div class="player-position">
+        ${player.pos}
+      </div>
+
+      <div class="player-name">
+        ${player.name}
+      </div>
+
+      <div class="player-rating">
+        ${player.rating}
+      </div>
+
+    </div>
+
+
+    <div class="card" style="
+      text-align:center;
+      margin-top:15px;
+    ">
+
+      <div class="auction-timer">
+
+        <span id="timer">
+          ${secondsLeft(auction.endsAt)}
+        </span>
+
+      </div>
+
+      <div class="current-bid">
+
+        <small>
+          أعلى مزايدة
+        </small>
+
+        <strong>
+          ${money(bid)}
+        </strong>
+
+      </div>
+
+      <p>
+
+        ${
+          auction.highestBidder === user.uid
+            ? "أنت أعلى مزايد حاليًا"
+            : auction.highestBidder
+              ? "الخصم أعلى مزايد حاليًا"
+              : "لا توجد مزايدة حتى الآن"
+        }
+
+      </p>
+
+      <button
+        id="bid"
+        class="btn btn-primary bid-button"
+        ${canBid ? "" : "disabled"}
+      >
+
+        زايد +${money(BID_INCREMENT)}
+
+      </button>
+
+    </div>
+
+
+    <div class="card" style="margin-top:15px">
+
+      <h3>
+        فريقك
+      </h3>
+
+      <p>
+        التشكيل:
+        <strong>4-3-3</strong>
+      </p>
+
+      <p>
+        عدد اللاعبين:
+        ${me.squad?.length || 0}
+      </p>
+
+      <p>
+        الميزانية:
+        ${money(me.budget)}
+      </p>
+
+    </div>
+
+
+    <div class="card" style="margin-top:15px">
+
+      <h3>
+        الخصم
+      </h3>
+
+      <p>
+        عدد اللاعبين:
+        ${opponent?.squad?.length || 0}
+      </p>
+
+      <p>
+        الميزانية:
+        ${money(opponent?.budget || 0)}
+      </p>
+
+    </div>
+
+  `);
 
   document
-    .getElementById("bidBtn")
+    .getElementById("bid")
     ?.addEventListener(
       "click",
-      placeBid
+      bidPlayer
     );
-
 
   startTimer();
 
 }
 
 
-// ============================================================
-// TIMER
-// ============================================================
+// ======================================================
+// BID
+// ======================================================
 
-function getRemainingSeconds(endsAt) {
+async function bidPlayer() {
 
-  const remaining =
-    Math.max(
-      0,
-      Number(endsAt || 0) - Date.now()
+  if (!match) return;
+
+  const auction =
+    match.auction;
+
+  if (
+    auction.finished
+  ) return;
+
+  if (
+    Date.now() >=
+    Number(auction.endsAt)
+  ) return;
+
+  const me =
+    match.players[user.uid];
+
+  const current =
+    Number(
+      auction.currentBid || 0
     );
 
-  return Math.ceil(
-    remaining / 1000
+  const next =
+    current +
+    BID_INCREMENT;
+
+  if (
+    next >
+    Number(me.budget || 0)
+  ) {
+
+    alert(
+      "الميزانية لا تكفي."
+    );
+
+    return;
+
+  }
+
+  await update(
+    ref(
+      db,
+      `matches/${matchId}`
+    ),
+    {
+
+      "auction/currentBid":
+        next,
+
+      "auction/highestBidder":
+        user.uid
+
+    }
+  );
+
+}
+
+
+// ======================================================
+// TIMER
+// ======================================================
+
+function secondsLeft(end) {
+
+  return Math.max(
+    0,
+    Math.ceil(
+      (
+        Number(end) -
+        Date.now()
+      ) / 1000
+    )
   );
 
 }
@@ -1417,46 +1018,36 @@ function startTimer() {
 
   stopTimer();
 
-  timerInterval =
+  timer =
     setInterval(
-      async () => {
+      () => {
 
-        if (!currentMatch) {
+        if (!match) return;
 
-          stopTimer();
-
-          return;
-
-        }
-
-        const endsAt =
-          Number(
-            currentMatch.auction?.endsAt ||
-            0
+        const left =
+          secondsLeft(
+            match.auction.endsAt
           );
 
-        const seconds =
-          getRemainingSeconds(
-            endsAt
-          );
-
-        const timer =
+        const element =
           document.getElementById(
             "timer"
           );
 
-        if (timer) {
+        if (element) {
 
-          timer.textContent =
-            seconds;
+          element.textContent =
+            left;
 
         }
 
-        if (seconds <= 0) {
+        if (
+          left <= 0
+        ) {
 
           stopTimer();
 
-          await finishAuction();
+          finishAuction();
 
         }
 
@@ -1469,227 +1060,99 @@ function startTimer() {
 
 function stopTimer() {
 
-  if (timerInterval) {
+  if (timer) {
 
-    clearInterval(
-      timerInterval
-    );
+    clearInterval(timer);
 
-    timerInterval = null;
+    timer = null;
 
   }
 
 }
 
 
-// ============================================================
-// BID
-// ============================================================
-
-async function placeBid() {
-
-  if (
-    !currentUser ||
-    !currentMatchId ||
-    !currentMatch
-  ) {
-
-    return;
-
-  }
-
-  const auction =
-    currentMatch.auction;
-
-  if (
-    auction?.finished
-  ) {
-
-    return;
-
-  }
-
-  if (
-    Date.now() >=
-    Number(auction?.endsAt || 0)
-  ) {
-
-    return;
-
-  }
-
-  const myData =
-    getMyPlayerData();
-
-  const budget =
-    Number(
-      myData?.budget ||
-      STARTING_BUDGET
-    );
-
-  const oldBid =
-    Number(
-      auction.currentBid || 0
-    );
-
-  const newBid =
-    oldBid + BID_INCREMENT;
-
-  if (
-    newBid > budget
-  ) {
-
-    alert(
-      "ميزانيتك لا تكفي لهذه المزايدة."
-    );
-
-    return;
-
-  }
-
-  const matchRef =
-    ref(
-      db,
-      `matches/${currentMatchId}`
-    );
-
-  try {
-
-    await update(
-      matchRef,
-      {
-
-        "auction/currentBid":
-          newBid,
-
-        "auction/highestBidder":
-          currentUser.uid
-
-      }
-    );
-
-  } catch (error) {
-
-    console.error(error);
-
-  }
-
-}
-
-
-// ============================================================
+// ======================================================
 // FINISH AUCTION
-// ============================================================
+// ======================================================
 
 async function finishAuction() {
 
-  if (
-    !currentMatchId ||
-    !currentMatch
-  ) {
+  if (finishing) return;
+
+  finishing = true;
+
+  const snapshot =
+    await get(
+      ref(
+        db,
+        `matches/${matchId}`
+      )
+    );
+
+  if (!snapshot.exists()) {
+
+    finishing = false;
 
     return;
 
   }
 
-  if (
-    isAuctionFinished
-  ) {
-
-    return;
-
-  }
-
-  isAuctionFinished = true;
-
-  const auction =
-    currentMatch.auction;
+  const data =
+    snapshot.val();
 
   if (
-    auction?.finished
+    data.auction.finished
   ) {
+
+    finishing = false;
 
     return;
 
   }
 
   const winner =
-    auction.highestBidder;
+    data.auction.highestBidder;
 
   const playerId =
-    auction.playerId;
+    data.auction.playerId;
 
   const player =
-    getPlayer(playerId);
+    playerById(playerId);
 
-  if (!player) return;
+  if (!player) {
 
-  const bid =
-    Number(
-      auction.currentBid || 0
-    );
-
-  const matchRef =
-    ref(
-      db,
-      `matches/${currentMatchId}`
-    );
-
-  const freshSnapshot =
-    await get(matchRef);
-
-  if (!freshSnapshot.exists()) {
+    finishing = false;
 
     return;
 
   }
 
-  const freshMatch =
-    freshSnapshot.val();
 
-  if (
-    freshMatch.auction?.finished
-  ) {
-
-    return;
-
-  }
-
-  // ----------------------------------------------------------
-  // NO BIDS
-  // ----------------------------------------------------------
+  // --------------------------------------------------
+  // NO BID
+  // --------------------------------------------------
 
   if (!winner) {
 
     await update(
-      matchRef,
+      ref(
+        db,
+        `matches/${matchId}/auction`
+      ),
       {
 
-        "auction/finished":
-          true,
+        finished:true,
 
-        "auction/result":
-          "no_bid",
-
-        "auction/winner":
-          null
+        result:"no_bid"
 
       }
     );
 
+    finishing = false;
+
     setTimeout(
-      () => {
-
-        if (
-          currentMatchId
-        ) {
-
-          nextAuction();
-
-        }
-
-      },
-      1800
+      nextAuction,
+      1500
     );
 
     return;
@@ -1697,77 +1160,85 @@ async function finishAuction() {
   }
 
 
-  // ----------------------------------------------------------
+  // --------------------------------------------------
   // WINNER
-  // ----------------------------------------------------------
+  // --------------------------------------------------
 
   const winnerData =
-    freshMatch.players?.[winner];
+    data.players[winner];
 
-  if (!winnerData) return;
-
-  const newBudget =
-    Math.max(
-      0,
-      Number(
-        winnerData.budget ||
-        0
-      ) - bid
+  const price =
+    Number(
+      data.auction.currentBid
     );
 
-  const currentSquad =
+  const newBudget =
+    Number(
+      winnerData.budget
+    ) - price;
+
+  const squad =
     Array.isArray(
       winnerData.squad
     )
       ? winnerData.squad
       : [];
 
-  const newSquad = [
-    ...currentSquad,
-    playerId
-  ];
+  const newSquad =
+    [
+      ...squad,
+      player.id
+    ];
+
 
   const updates = {};
 
   updates[
     `players/${winner}/budget`
-  ] = newBudget;
+  ] =
+    newBudget;
 
   updates[
     `players/${winner}/squad`
-  ] = newSquad;
+  ] =
+    newSquad;
 
   updates[
     "auction/finished"
-  ] = true;
+  ] =
+    true;
 
   updates[
     "auction/winner"
-  ] = winner;
+  ] =
+    winner;
 
   updates[
     "auction/result"
-  ] = "sold";
+  ] =
+    "sold";
+
 
   await update(
-    matchRef,
+    ref(
+      db,
+      `matches/${matchId}`
+    ),
     updates
   );
+
+
+  finishing = false;
+
 
   setTimeout(
     () => {
 
-      if (
-        currentMatchId
-      ) {
-
-        showAuctionResult(
-          player,
-          winner,
-          bid
-        );
-
-      }
+      showSold(
+        player,
+        winner,
+        price
+      );
 
     },
     800
@@ -1776,138 +1247,108 @@ async function finishAuction() {
 }
 
 
-// ============================================================
-// AUCTION RESULT
-// ============================================================
+// ======================================================
+// SOLD
+// ======================================================
 
-function showAuctionResult(
+function showSold(
   player,
   winner,
-  bid
+  price
 ) {
 
-  const wonByMe =
-    winner ===
-    currentUser.uid;
+  const mine =
+    winner === user.uid;
 
-  root.innerHTML = `
-    <div class="app">
+  root.innerHTML =
+    appHTML(`
 
-      <section class="screen">
+      <div class="card" style="
+        text-align:center;
+        margin-top:50px;
+      ">
 
-        <div class="container">
-
-          <div class="result card">
-
-            <div style="
-              font-size:52px;
-              text-align:center;
-            ">
-              ${wonByMe ? "🏆" : "⚽"}
-            </div>
-
-            <h2 style="text-align:center">
-
-              ${
-                wonByMe
-                  ? "كسبت اللاعب!"
-                  : "الخصم كسب اللاعب"
-              }
-
-            </h2>
-
-            <div class="player-card">
-
-              <strong>
-                ${escapeHTML(player.name)}
-              </strong>
-
-              <span>
-                ${player.position}
-              </span>
-
-              <span>
-                ${player.rating}
-              </span>
-
-            </div>
-
-            <div style="
-              text-align:center;
-              margin-top:15px;
-            ">
-
-              ${
-                wonByMe
-                  ? `دفعت ${money(bid)}`
-                  : `سعر البيع ${money(bid)}`
-              }
-
-            </div>
-
-          </div>
-
+        <div style="
+          font-size:55px;
+        ">
+          ${mine ? "🏆" : "⚽"}
         </div>
 
-      </section>
+        <h2>
 
-    </div>
-  `;
+          ${
+            mine
+              ? "كسبت اللاعب!"
+              : "الخصم كسب اللاعب"
+          }
+
+        </h2>
+
+        <h3>
+          ${player.name}
+        </h3>
+
+        <p>
+          السعر:
+          <strong>
+            ${money(price)}
+          </strong>
+        </p>
+
+      </div>
+
+    `);
 
   setTimeout(
-    () => {
-
-      nextAuction();
-
-    },
-    2000
+    nextAuction,
+    1800
   );
 
 }
 
 
-// ============================================================
+// ======================================================
 // NEXT AUCTION
-// ============================================================
+// ======================================================
 
 async function nextAuction() {
 
-  if (!currentMatchId) return;
-
-  const matchRef =
-    ref(
-      db,
-      `matches/${currentMatchId}`
-    );
-
   const snapshot =
-    await get(matchRef);
+    await get(
+      ref(
+        db,
+        `matches/${matchId}`
+      )
+    );
 
   if (!snapshot.exists()) return;
 
-  const match =
+  const data =
     snapshot.val();
 
-  const players =
+  const ids =
     Object.keys(
-      match.players || {}
+      data.players || {}
     );
 
-  const allHaveEnough =
-    players.every(
-      uid =>
+  const enough =
+    ids.every(
+      id =>
         (
-          match.players?.[uid]?.squad
-            ?.length || 0
-        ) >= 11
+          data.players[id].squad ||
+          []
+        ).length >= 11
     );
 
-  if (allHaveEnough) {
+  if (enough) {
 
     await update(
-      matchRef,
+      ref(
+        db,
+        `matches/${matchId}`
+      ),
       {
-        status: "finished"
+        status:"finished"
       }
     );
 
@@ -1915,360 +1356,22 @@ async function nextAuction() {
 
   }
 
-  const used =
-    new Set();
 
-  players.forEach(
-    uid => {
+  const used = new Set();
+
+  ids.forEach(
+    id => {
 
       (
-        match.players?.[uid]?.squad ||
+        data.players[id].squad ||
         []
       ).forEach(
-        id =>
-          used.add(id)
+        playerId =>
+          used.add(playerId)
       );
 
     }
   );
 
-  const available =
-    PLAYERS.filter(
-      p =>
-        !used.has(p.id)
-    );
 
-  if (available.length === 0) {
-
-    await update(
-      matchRef,
-      {
-        status: "finished"
-      }
-    );
-
-    return;
-
-  }
-
-  const nextPlayer =
-    available[
-      Math.floor(
-        Math.random() *
-        available.length
-      )
-    ];
-
-  const round =
-    Number(
-      match.auction?.round || 1
-    ) + 1;
-
-  await update(
-    matchRef,
-    {
-
-      status: "auction",
-
-      "auction/playerId":
-        nextPlayer.id,
-
-      "auction/currentBid":
-        0,
-
-      "auction/highestBidder":
-        null,
-
-      "auction/endsAt":
-        Date.now() +
-        AUCTION_TIME * 1000,
-
-      "auction/round":
-        round,
-
-      "auction/finished":
-        false,
-
-      "auction/winner":
-        null,
-
-      "auction/result":
-        null
-
-    }
-  );
-
-  isAuctionFinished = false;
-
-}
-
-
-// ============================================================
-// FINAL RESULT
-// ============================================================
-
-function calculateTeamRating(
-  squad
-) {
-
-  if (
-    !Array.isArray(squad) ||
-    squad.length === 0
-  ) {
-
-    return 0;
-
-  }
-
-  const players =
-    squad
-      .map(id => getPlayer(id))
-      .filter(Boolean);
-
-  if (
-    players.length === 0
-  ) {
-
-    return 0;
-
-  }
-
-  const total =
-    players.reduce(
-      (sum, player) =>
-        sum + Number(
-          player.rating || 0
-        ),
-      0
-    );
-
-  return Math.round(
-    total / players.length
-  );
-
-}
-
-
-function showFinalResult() {
-
-  stopTimer();
-
-  if (!currentMatch) return;
-
-  const ids =
-    Object.keys(
-      currentMatch.players || {}
-    );
-
-  const myId =
-    currentUser.uid;
-
-  const opponentId =
-    ids.find(
-      id =>
-        id !== myId
-    );
-
-  const myData =
-    currentMatch.players?.[myId];
-
-  const opponentData =
-    currentMatch.players?.[opponentId];
-
-  const myRating =
-    calculateTeamRating(
-      myData?.squad || []
-    );
-
-  const opponentRating =
-    calculateTeamRating(
-      opponentData?.squad || []
-    );
-
-  let title =
-    "تعادل";
-
-  if (
-    myRating >
-    opponentRating
-  ) {
-
-    title =
-      "أنت الفائز!";
-
-  }
-
-  if (
-    myRating <
-    opponentRating
-  ) {
-
-    title =
-      "الخصم فاز";
-
-  }
-
-  root.innerHTML = `
-    <div class="app">
-
-      <section class="screen">
-
-        <div class="container">
-
-          <div class="result card">
-
-            <div style="
-              font-size:55px;
-              text-align:center;
-            ">
-              ${
-                title === "أنت الفائز!"
-                  ? "🏆"
-                  : title === "تعادل"
-                    ? "🤝"
-                    : "⚽"
-              }
-            </div>
-
-            <h1 style="text-align:center">
-              ${title}
-            </h1>
-
-            <div class="team-comparison">
-
-              <div class="card">
-
-                <h3>
-                  فريقك
-                </h3>
-
-                <div class="player-rating">
-                  ${myRating}
-                </div>
-
-                <p>
-                  التشكيل 4-3-3
-                </p>
-
-              </div>
-
-
-              <div class="card">
-
-                <h3>
-                  الخصم
-                </h3>
-
-                <div class="player-rating">
-                  ${opponentRating}
-                </div>
-
-                <p>
-                  التشكيل 4-3-3
-                </p>
-
-              </div>
-
-            </div>
-
-
-            <button
-              id="backHome"
-              class="btn btn-primary"
-              style="
-                width:100%;
-                margin-top:20px;
-              "
-            >
-              العودة للرئيسية
-            </button>
-
-          </div>
-
-        </div>
-
-      </section>
-
-    </div>
-  `;
-
-  document
-    .getElementById("backHome")
-    ?.addEventListener(
-      "click",
-      () => {
-
-        if (matchListener) {
-
-          matchListener();
-
-          matchListener = null;
-
-        }
-
-        currentMatchId = null;
-
-        currentMatch = null;
-
-        isAuctionFinished = false;
-
-        showHome();
-
-      }
-    );
-
-}
-
-
-// ============================================================
-// AUTH
-// ============================================================
-
-async function startAuth() {
-
-  try {
-
-    await signInAnonymously(
-      auth
-    );
-
-  } catch (error) {
-
-    console.error(
-      "Anonymous Auth Error:",
-      error
-    );
-
-    showError(
-      "فشل تسجيل الدخول المجهول في Firebase."
-    );
-
-  }
-
-}
-
-
-onAuthStateChanged(
-  auth,
-  user => {
-
-    if (!user) return;
-
-    currentUser = user;
-
-    console.log(
-      "MZAD User:",
-      user.uid
-    );
-
-    showHome();
-
-  }
-);
-
-
-// ============================================================
-// START
-// ============================================================
-
-startAuth();
+  const available
