@@ -1,16 +1,70 @@
 // ==========================================
-// MZAD - Football Auction Game
-// app.js
+// MZAD - Firebase Connection
+// ==========================================
+
+import { initializeApp } from
+  "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+
+import {
+  getAuth,
+  signInAnonymously,
+  onAuthStateChanged
+} from
+  "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue
+} from
+  "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+
+
+// ==========================================
+// FIREBASE CONFIG
+// ==========================================
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAPEPcsqW4b_UiE9iv3nmC5EufdkJ7-xK0",
+  authDomain: "mzad-game-45174.firebaseapp.com",
+
+  // هنحط الرابط الحقيقي هنا بعد شوية
+  databaseURL: "PUT_YOUR_DATABASE_URL_HERE",
+
+  projectId: "mzad-game-45174",
+  storageBucket: "mzad-game-45174.firebasestorage.app",
+  messagingSenderId: "111631595997",
+  appId: "1:111631595997:web:233d623bf2af5fe51ede34"
+};
+
+
+// ==========================================
+// INITIALIZE FIREBASE
+// ==========================================
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const database = getDatabase(app);
+
+
+// ==========================================
+// MZAD GAME STATE
 // ==========================================
 
 const MZAD = {
+
   player: {
+    uid: null,
     name: "Player",
     budget: 200000000,
     squad: []
   },
 
   opponent: {
+    uid: null,
     name: "Searching...",
     budget: 200000000,
     squad: []
@@ -30,43 +84,101 @@ const MZAD = {
     "4-1-4-1",
     "4-4-1-1"
   ]
+
 };
 
 
 // ==========================================
-// Helpers
+// BASIC HELPERS
 // ==========================================
 
 function money(value) {
-  return new Intl.NumberFormat("en-US").format(value);
+
+  return new Intl.NumberFormat("en-US")
+    .format(value);
+
 }
+
 
 function getRoot() {
+
   return document.getElementById("root");
-}
 
-function clearScreen() {
-  getRoot().innerHTML = "";
 }
 
 
-// ==========================================
-// HOME SCREEN
-// ==========================================
-
-function showHome() {
-  clearScreen();
+function showMessage(title, message) {
 
   getRoot().innerHTML = `
+
     <main style="
       min-height:100vh;
       display:flex;
       align-items:center;
       justify-content:center;
-      padding:24px;
+      padding:20px;
+      background:#07111f;
+      color:white;
+      font-family:Arial,sans-serif;
+      direction:rtl;
+    ">
+
+      <section style="
+        width:100%;
+        max-width:500px;
+        padding:30px;
+        text-align:center;
+        background:#101d2e;
+        border-radius:22px;
+      ">
+
+        <div style="
+          font-size:48px;
+          margin-bottom:15px;
+        ">
+          ⚽
+        </div>
+
+        <h1>${title}</h1>
+
+        <p style="
+          opacity:.7;
+          line-height:1.8;
+        ">
+          ${message}
+        </p>
+
+      </section>
+
+    </main>
+
+  `;
+
+}
+
+
+// ==========================================
+// HOME
+// ==========================================
+
+function showHome() {
+
+  getRoot().innerHTML = `
+
+    <main style="
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
       color:white;
       background:
-        radial-gradient(circle at top, #12365c 0%, #07111f 55%);
+        radial-gradient(
+          circle at top,
+          #12365c 0%,
+          #07111f 55%
+        );
+      direction:rtl;
     ">
 
       <section style="
@@ -79,7 +191,6 @@ function showHome() {
           font-size:64px;
           font-weight:900;
           letter-spacing:3px;
-          margin-bottom:8px;
         ">
           MZAD
         </div>
@@ -103,7 +214,6 @@ function showHome() {
           <div style="
             font-size:14px;
             opacity:.7;
-            margin-bottom:8px;
           ">
             الميزانية
           </div>
@@ -111,6 +221,7 @@ function showHome() {
           <div style="
             font-size:30px;
             font-weight:800;
+            margin-top:8px;
           ">
             ${money(MZAD.player.budget)}
           </div>
@@ -126,7 +237,7 @@ function showHome() {
         </div>
 
         <button
-          onclick="startMatchmaking()"
+          id="startButton"
           style="
             width:100%;
             padding:18px;
@@ -142,274 +253,134 @@ function showHome() {
           🎮 ابدأ مباراة
         </button>
 
+        <div style="
+          margin-top:18px;
+          font-size:12px;
+          opacity:.4;
+          direction:ltr;
+        ">
+          UID: ${MZAD.player.uid || "connecting..."}
+        </div>
+
       </section>
 
     </main>
+
   `;
+
+
+  document
+    .getElementById("startButton")
+    .addEventListener("click", startMatchmaking);
+
 }
 
 
 // ==========================================
-// MATCHMAKING
+// MATCHMAKING PREVIEW
 // ==========================================
 
 function startMatchmaking() {
-  clearScreen();
 
-  getRoot().innerHTML = `
-    <main style="
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:white;
-      background:#07111f;
-      text-align:center;
-      padding:24px;
-    ">
-
-      <section>
-
-        <div style="
-          font-size:60px;
-          margin-bottom:20px;
-        ">
-          ⚽
-        </div>
-
-        <h1>
-          بندور على لاعب...
-        </h1>
-
-        <p style="opacity:.6;">
-          جاري البحث عن خصم حقيقي أونلاين
-        </p>
-
-        <div style="
-          margin:30px auto;
-          width:50px;
-          height:50px;
-          border:5px solid rgba(255,255,255,.15);
-          border-top-color:#19d36b;
-          border-radius:50%;
-          animation:spin 1s linear infinite;
-        "></div>
-
-      </section>
-
-    </main>
-
-    <style>
-      @keyframes spin {
-        from { transform:rotate(0deg); }
-        to { transform:rotate(360deg); }
-      }
-    </style>
-  `;
-
-  /*
-    مهم:
-    ده مؤقت في المرحلة الأولى.
-
-    بعد ربط Firebase:
-    startMatchmaking()
-    هتبحث فعليًا عن لاعب حقيقي
-    بدل الانتظار الوهمي.
-  */
-
-  setTimeout(showFormationSelection, 1800);
-}
-
-
-// ==========================================
-// FORMATION SELECTION
-// ==========================================
-
-function showFormationSelection() {
-  clearScreen();
-
-  const formationButtons = MZAD.formations
-    .map(
-      formation => `
-        <button
-          onclick="selectFormation('${formation}')"
-          style="
-            padding:18px 10px;
-            border:1px solid rgba(255,255,255,.1);
-            border-radius:14px;
-            background:#101d2e;
-            color:white;
-            font-size:17px;
-            font-weight:700;
-            cursor:pointer;
-          "
-        >
-          ${formation}
-        </button>
-      `
-    )
-    .join("");
-
-  getRoot().innerHTML = `
-    <main style="
-      min-height:100vh;
-      background:#07111f;
-      color:white;
-      padding:30px 18px;
-    ">
-
-      <section style="
-        max-width:600px;
-        margin:auto;
-      ">
-
-        <h1 style="
-          text-align:center;
-          margin-bottom:8px;
-        ">
-          اختر تشكيلتك
-        </h1>
-
-        <p style="
-          text-align:center;
-          opacity:.6;
-          margin-bottom:30px;
-        ">
-          اختار التشكيلة اللي هتلعب بيها
-        </p>
-
-        <div style="
-          display:grid;
-          grid-template-columns:repeat(2,1fr);
-          gap:12px;
-        ">
-          ${formationButtons}
-        </div>
-
-      </section>
-
-    </main>
-  `;
-}
-
-
-// ==========================================
-// SELECT FORMATION
-// ==========================================
-
-function selectFormation(formation) {
-
-  MZAD.selectedFormation = formation;
-
-  console.log(
-    "Selected formation:",
-    formation
+  showMessage(
+    "جاري البحث...",
+    "بنجهز نظام الـMultiplayer الحقيقي. اتصال Firebase شغال."
   );
 
-  startAuctionPreview();
 }
 
 
 // ==========================================
-// AUCTION PREVIEW
+// FIREBASE AUTH
 // ==========================================
 
-function startAuctionPreview() {
-  clearScreen();
+async function startFirebase() {
 
-  getRoot().innerHTML = `
-    <main style="
-      min-height:100vh;
-      background:#07111f;
-      color:white;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:20px;
-      text-align:center;
-    ">
+  try {
 
-      <section style="
-        width:100%;
-        max-width:500px;
-      ">
+    await signInAnonymously(auth);
 
-        <div style="
-          font-size:18px;
-          opacity:.6;
-        ">
-          تشكيلتك
-        </div>
+  } catch (error) {
 
-        <div style="
-          font-size:40px;
-          font-weight:900;
-          margin:10px 0 35px;
-        ">
-          ${MZAD.selectedFormation}
-        </div>
+    console.error(
+      "Firebase Auth Error:",
+      error
+    );
 
-        <div style="
-          background:#101d2e;
-          border-radius:20px;
-          padding:25px;
-        ">
+    showMessage(
+      "حصل خطأ",
+      "مش قادرين نسجل دخول اللاعب في Firebase. راجع إعداد Anonymous Authentication."
+    );
 
-          <div style="
-            font-size:14px;
-            opacity:.6;
-          ">
-            المزاد
-          </div>
+  }
 
-          <div style="
-            font-size:50px;
-            margin:15px 0;
-          ">
-            🔨
-          </div>
-
-          <div style="
-            font-size:20px;
-            font-weight:800;
-          ">
-            تجهيز المزاد...
-          </div>
-
-          <div style="
-            font-size:13px;
-            opacity:.5;
-            margin-top:10px;
-          ">
-            سيتم ربط المزاد الحقيقي بالسيرفر في الخطوة القادمة
-          </div>
-
-        </div>
-
-      </section>
-
-    </main>
-  `;
-
-  /*
-    في المرحلة القادمة:
-    Firebase + Multiplayer + Auction Server
-    هيحلوا مكان الشاشة دي.
-  */
 }
 
 
 // ==========================================
-// START GAME
+// AUTH STATE
 // ==========================================
 
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
+onAuthStateChanged(auth, async (user) => {
 
-    console.log("MZAD loaded");
+  if (!user) {
+    return;
+  }
+
+  console.log(
+    "Firebase user connected:",
+    user.uid
+  );
+
+  MZAD.player.uid = user.uid;
+
+  try {
+
+    // اختبار اتصال بسيط بقاعدة البيانات
+    const playerRef = ref(
+      database,
+      "players/" + user.uid
+    );
+
+    await set(playerRef, {
+
+      uid: user.uid,
+
+      name: "Player",
+
+      budget: 200000000,
+
+      connectedAt: Date.now()
+
+    });
+
+    console.log(
+      "Realtime Database connection: OK"
+    );
 
     showHome();
 
+  } catch (error) {
+
+    console.error(
+      "Realtime Database Error:",
+      error
+    );
+
+    showMessage(
+      "مشكلة في قاعدة البيانات",
+      "Firebase اتصل، لكن Realtime Database محتاجة Database URL أو قواعد أمان صحيحة."
+    );
+
   }
-);
+
+});
+
+
+// ==========================================
+// START
+// ==========================================
+
+console.log("MZAD starting...");
+
+startFirebase();
