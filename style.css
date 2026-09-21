@@ -1,0 +1,593 @@
+/* =========================================
+   MZAD - Football Auction Game
+   Main Styles
+========================================= */
+
+:root {
+  --bg: #06101d;
+  --bg2: #0b1929;
+  --card: #101f31;
+  --card2: #14263a;
+  --text: #ffffff;
+  --muted: #91a2b5;
+  --green: #19d36b;
+  --green-dark: #0e9f4e;
+  --blue: #2585ff;
+  --red: #ff4d5d;
+  --gold: #ffc857;
+  --border: rgba(255,255,255,.09);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at 50% -10%,
+      #16365a 0%,
+      var(--bg) 45%
+    );
+  color: var(--text);
+  font-family:
+    Arial,
+    "Segoe UI",
+    Tahoma,
+    sans-serif;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* =========================================
+   Main App
+========================================= */
+
+.app {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.screen {
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  width: 100%;
+  max-width: 1100px;
+  margin: auto;
+}
+
+/* =========================================
+   Header
+========================================= */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+
+  background: rgba(16,31,49,.82);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+
+  backdrop-filter: blur(15px);
+}
+
+.logo {
+  font-size: 25px;
+  font-weight: 950;
+  letter-spacing: 2px;
+}
+
+.logo span {
+  color: var(--green);
+}
+
+.budget {
+  padding: 9px 13px;
+  border-radius: 12px;
+  background: rgba(25,211,107,.1);
+  border: 1px solid rgba(25,211,107,.2);
+  color: var(--green);
+  font-weight: 800;
+}
+
+/* =========================================
+   Cards
+========================================= */
+
+.card {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(20,38,58,.96),
+      rgba(10,24,40,.96)
+    );
+
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 22px;
+
+  box-shadow:
+    0 15px 40px rgba(0,0,0,.2);
+}
+
+.card-title {
+  margin: 0 0 8px;
+  font-size: 23px;
+  font-weight: 900;
+}
+
+.card-subtitle {
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+
+/* =========================================
+   Buttons
+========================================= */
+
+.btn {
+  width: 100%;
+  padding: 15px 18px;
+
+  border-radius: 14px;
+
+  color: white;
+  background: var(--card2);
+
+  border: 1px solid var(--border);
+
+  font-weight: 800;
+  cursor: pointer;
+
+  transition:
+    transform .15s ease,
+    opacity .15s ease,
+    background .15s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: scale(.98);
+}
+
+.btn-primary {
+  color: #04120a;
+  background: var(--green);
+}
+
+.btn-blue {
+  background: var(--blue);
+}
+
+.btn-danger {
+  background: var(--red);
+}
+
+.btn-gold {
+  color: #181000;
+  background: var(--gold);
+}
+
+/* =========================================
+   Home
+========================================= */
+
+.home {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.home-box {
+  width: 100%;
+  max-width: 520px;
+  text-align: center;
+}
+
+.brand {
+  margin-bottom: 5px;
+
+  font-size: clamp(52px, 15vw, 90px);
+  line-height: 1;
+  font-weight: 1000;
+  letter-spacing: 4px;
+}
+
+.brand-green {
+  color: var(--green);
+}
+
+.brand-subtitle {
+  margin-bottom: 35px;
+  color: var(--muted);
+  font-size: 20px;
+}
+
+/* =========================================
+   Formation Grid
+========================================= */
+
+.formation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.formation {
+  padding: 18px 10px;
+
+  background: var(--card);
+  color: white;
+
+  border: 1px solid var(--border);
+  border-radius: 15px;
+
+  font-weight: 900;
+  cursor: pointer;
+
+  transition: .15s;
+}
+
+.formation:hover {
+  border-color: var(--green);
+  background: rgba(25,211,107,.08);
+}
+
+/* =========================================
+   Matchmaking
+========================================= */
+
+.matchmaking {
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.loader {
+  width: 55px;
+  height: 55px;
+
+  margin: 25px auto;
+
+  border-radius: 50%;
+  border: 5px solid rgba(255,255,255,.1);
+  border-top-color: var(--green);
+
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================
+   Auction
+========================================= */
+
+.auction-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.auction-player {
+  text-align: center;
+  padding: 28px 20px;
+}
+
+.player-position {
+  color: var(--green);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.player-name {
+  margin: 10px 0;
+
+  font-size: clamp(28px, 8vw, 48px);
+  font-weight: 950;
+}
+
+.player-rating {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 70px;
+  height: 70px;
+
+  margin: 10px;
+
+  border-radius: 18px;
+
+  background: var(--gold);
+  color: #111;
+
+  font-size: 27px;
+  font-weight: 950;
+}
+
+.auction-timer {
+  margin: 20px 0;
+
+  font-size: 52px;
+  font-weight: 1000;
+}
+
+.current-bid {
+  margin: 10px 0 20px;
+
+  font-size: 32px;
+  font-weight: 950;
+
+  color: var(--green);
+}
+
+.bid-button {
+  width: 100%;
+
+  padding: 18px;
+
+  border-radius: 15px;
+
+  background: var(--green);
+  color: #04120a;
+
+  font-size: 21px;
+  font-weight: 950;
+
+  cursor: pointer;
+}
+
+/* =========================================
+   Squad
+========================================= */
+
+.pitch {
+  position: relative;
+
+  width: 100%;
+  max-width: 650px;
+
+  aspect-ratio: 3 / 4;
+
+  margin: auto;
+
+  overflow: hidden;
+
+  border-radius: 25px;
+
+  background:
+    repeating-linear-gradient(
+      0deg,
+      #167642 0,
+      #167642 10%,
+      #188149 10%,
+      #188149 20%
+    );
+
+  border: 5px solid rgba(255,255,255,.15);
+}
+
+.pitch-line {
+  position: absolute;
+
+  border: 2px solid rgba(255,255,255,.7);
+}
+
+.pitch-center {
+  width: 35%;
+  aspect-ratio: 1;
+
+  left: 32.5%;
+  top: 37.5%;
+
+  border-radius: 50%;
+}
+
+.player-token {
+  position: absolute;
+
+  transform: translate(-50%, -50%);
+
+  width: 65px;
+  min-height: 65px;
+
+  padding: 7px;
+
+  border-radius: 15px;
+
+  background: rgba(5,18,31,.92);
+
+  border: 2px solid rgba(255,255,255,.2);
+
+  text-align: center;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  box-shadow: 0 7px 18px rgba(0,0,0,.3);
+}
+
+.player-token-rating {
+  display: block;
+
+  color: var(--gold);
+  font-size: 17px;
+}
+
+/* =========================================
+   Player Cards
+========================================= */
+
+.player-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.player-card {
+  padding: 15px;
+
+  background: var(--card);
+
+  border: 1px solid var(--border);
+  border-radius: 17px;
+}
+
+.player-card-name {
+  font-weight: 900;
+}
+
+.player-card-info {
+  margin-top: 5px;
+
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* =========================================
+   Team Comparison
+========================================= */
+
+.team-comparison {
+  display: grid;
+  grid-template-columns: 1fr 80px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.team {
+  text-align: center;
+}
+
+.team-rating {
+  margin: 10px 0;
+
+  font-size: 45px;
+  font-weight: 1000;
+}
+
+.vs {
+  text-align: center;
+
+  color: var(--muted);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+/* =========================================
+   Result
+========================================= */
+
+.result {
+  text-align: center;
+}
+
+.result-icon {
+  font-size: 70px;
+  margin-bottom: 15px;
+}
+
+.result-title {
+  font-size: 38px;
+  font-weight: 1000;
+}
+
+.result-rating {
+  margin: 20px 0;
+
+  font-size: 60px;
+  font-weight: 1000;
+
+  color: var(--green);
+}
+
+/* =========================================
+   Responsive
+========================================= */
+
+@media (min-width: 700px) {
+
+  .screen {
+    padding: 30px;
+  }
+
+  .auction-layout {
+    grid-template-columns: 1fr 350px;
+  }
+
+  .formation-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .player-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+}
+
+@media (max-width: 420px) {
+
+  .screen {
+    padding: 14px;
+  }
+
+  .card {
+    padding: 17px;
+  }
+
+  .team-comparison {
+    grid-template-columns: 1fr 45px 1fr;
+  }
+
+  .team-rating {
+    font-size: 35px;
+  }
+
+}
