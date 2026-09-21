@@ -11,15 +11,15 @@ import {
   ref,
   set,
   get,
-  remove,
   onValue,
+  remove,
   onDisconnect
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
 
 
-// ===============================
-// FIREBASE
-// ===============================
+// =====================================
+// FIREBASE CONFIG
+// =====================================
 
 const firebaseConfig = {
   apiKey: "AIzaSyAPEPcsqW4b_UiE9iv3nmC5EufdkJ7-xK0",
@@ -31,14 +31,19 @@ const firebaseConfig = {
   appId: "1:111631595997:web:233d623bf2af5fe51ede34"
 };
 
+
+// =====================================
+// FIREBASE START
+// =====================================
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
 
-// ===============================
-// GAME
-// ===============================
+// =====================================
+// GAME DATA
+// =====================================
 
 let UID = null;
 let MATCH_ID = null;
@@ -58,274 +63,336 @@ const formations = [
 ];
 
 
-// ===============================
-// UI
-// ===============================
+// =====================================
+// GET ROOT
+// =====================================
 
-function page(content) {
+function getRoot() {
+  let root = document.getElementById("root");
 
-  document.body.innerHTML = `
-    <div class="page">
-      ${content}
-    </div>
-  `;
+  if (!root) {
+    root = document.createElement("div");
+    root.id = "root";
+    document.body.appendChild(root);
+  }
 
-  addCSS();
+  return root;
 }
 
 
-function addCSS() {
+// =====================================
+// BASIC CSS
+// =====================================
 
-  if (document.getElementById("mzad-css")) return;
+const css = document.createElement("style");
 
-  const style = document.createElement("style");
+css.textContent = `
 
-  style.id = "mzad-css";
-
-  style.textContent = `
-
-    * {
-      box-sizing:border-box;
-    }
-
-    body {
-      margin:0;
-      background:#07111f;
-      color:white;
-      font-family:Arial,sans-serif;
-    }
-
-    .page {
-      min-height:100vh;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      padding:20px;
-      direction:rtl;
-      background:
-      radial-gradient(
-        circle at top,
-        #12375c,
-        #07111f 65%
-      );
-    }
-
-    .box {
-      width:100%;
-      max-width:600px;
-      text-align:center;
-    }
-
-    .logo {
-      font-size:65px;
-      font-weight:900;
-      letter-spacing:4px;
-    }
-
-    .sub {
-      opacity:.65;
-      font-size:22px;
-      margin-bottom:30px;
-    }
-
-    .budget {
-      background:#101d2e;
-      border:1px solid #26384d;
-      padding:25px;
-      border-radius:20px;
-      margin-bottom:20px;
-    }
-
-    .money {
-      font-size:30px;
-      font-weight:900;
-      margin-top:10px;
-    }
-
-    button {
-      width:100%;
-      padding:18px;
-      border:0;
-      border-radius:15px;
-      background:#19d36b;
-      color:#04110a;
-      font-size:19px;
-      font-weight:900;
-      cursor:pointer;
-      margin-top:10px;
-    }
-
-    button:active {
-      transform:scale(.98);
-    }
-
-    .loader {
-      width:55px;
-      height:55px;
-      border:5px solid #243447;
-      border-top-color:#19d36b;
-      border-radius:50%;
-      animation:spin 1s linear infinite;
-      margin:30px auto;
-    }
-
-    .status {
-      margin-top:20px;
-      color:#19d36b;
-      line-height:1.8;
-    }
-
-    .error {
-      color:#ff7777;
-      background:#301b22;
-      padding:15px;
-      border-radius:12px;
-      margin-top:20px;
-      word-break:break-word;
-    }
-
-    .formations {
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-top:25px;
-    }
-
-    .formation {
-      background:#101d2e;
-      color:white;
-      border:1px solid #26384d;
-    }
-
-    .formation:hover {
-      border-color:#19d36b;
-    }
-
-    .vs {
-      font-size:35px;
-      font-weight:900;
-      margin:30px;
-      color:#19d36b;
-    }
-
-    @keyframes spin {
-      to {
-        transform:rotate(360deg);
-      }
-    }
-
-  `;
-
-  document.head.appendChild(style);
+#root {
+  min-height:100vh;
+  direction:rtl;
 }
 
+.mzad-page {
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:
+    radial-gradient(
+      circle at top,
+      #123b63 0%,
+      #07111f 60%
+    );
+  color:white;
+  font-family:Arial,sans-serif;
+}
 
-// ===============================
-// HOME
-// ===============================
+.mzad-box {
+  width:100%;
+  max-width:520px;
+  text-align:center;
+}
 
-function home() {
+.mzad-logo {
+  font-size:64px;
+  font-weight:900;
+  letter-spacing:5px;
+}
 
-  page(`
+.mzad-subtitle {
+  font-size:22px;
+  opacity:.7;
+  margin-top:5px;
+  margin-bottom:30px;
+}
 
-    <div class="box">
+.mzad-card {
+  background:#101d2e;
+  border:1px solid #26384d;
+  border-radius:20px;
+  padding:25px;
+  margin-bottom:20px;
+}
 
-      <div class="logo">
-        MZAD
-      </div>
+.mzad-budget-label {
+  opacity:.6;
+}
 
-      <div class="sub">
-        مزاد كرة القدم
-      </div>
+.mzad-budget {
+  font-size:30px;
+  font-weight:900;
+  margin-top:8px;
+}
 
-      <div class="budget">
+.mzad-button {
+  width:100%;
+  border:0;
+  border-radius:15px;
+  padding:18px;
+  background:#19d36b;
+  color:#03130a;
+  font-size:19px;
+  font-weight:900;
+  cursor:pointer;
+}
 
-        <div>
-          الميزانية
+.mzad-button:active {
+  transform:scale(.98);
+}
+
+.mzad-football {
+  font-size:70px;
+  margin-bottom:15px;
+}
+
+.mzad-muted {
+  color:#9aabbd;
+  line-height:1.8;
+}
+
+.mzad-loader {
+  width:55px;
+  height:55px;
+  border:5px solid #243448;
+  border-top-color:#19d36b;
+  border-radius:50%;
+  margin:25px auto;
+  animation:mzadspin 1s linear infinite;
+}
+
+.mzad-status {
+  color:#19d36b;
+  margin-top:20px;
+  line-height:1.8;
+  word-break:break-word;
+}
+
+.mzad-formations {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:25px;
+}
+
+.mzad-formation {
+  background:#101d2e;
+  color:white;
+  border:1px solid #26384d;
+  border-radius:14px;
+  padding:18px 10px;
+  font-size:17px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.mzad-error {
+  background:#351c25;
+  border:1px solid #713344;
+  border-radius:12px;
+  padding:15px;
+  margin-top:20px;
+  color:#ff9ba9;
+  word-break:break-word;
+}
+
+@keyframes mzadspin {
+  to {
+    transform:rotate(360deg);
+  }
+}
+
+`;
+
+document.head.appendChild(css);
+
+
+// =====================================
+// HOME SCREEN
+// =====================================
+
+function showHome() {
+
+  getRoot().innerHTML = `
+
+    <div class="mzad-page">
+
+      <div class="mzad-box">
+
+        <div class="mzad-logo">
+          MZAD
         </div>
 
-        <div class="money">
-          200,000,000
+        <div class="mzad-subtitle">
+          مزاد كرة القدم
         </div>
 
-        <small>
-          فلوس افتراضية
-        </small>
+        <div class="mzad-card">
+
+          <div class="mzad-budget-label">
+            الميزانية
+          </div>
+
+          <div class="mzad-budget">
+            200,000,000
+          </div>
+
+          <small>
+            فلوس افتراضية
+          </small>
+
+        </div>
+
+        <button
+          id="startMatch"
+          class="mzad-button"
+        >
+          🎮 ابدأ مباراة
+        </button>
 
       </div>
-
-      <button id="start">
-        🎮 ابدأ مباراة
-      </button>
 
     </div>
 
-  `);
+  `;
 
   document
-    .getElementById("start")
+    .getElementById("startMatch")
     .onclick = startMatchmaking;
 }
 
 
-// ===============================
-// SEARCHING
-// ===============================
+// =====================================
+// SEARCH SCREEN
+// =====================================
 
-function searchingScreen(message = "جاري البحث عن خصم حقيقي...") {
+function showSearching(text) {
 
-  page(`
+  getRoot().innerHTML = `
 
-    <div class="box">
+    <div class="mzad-page">
 
-      <div style="font-size:70px">
-        ⚽
-      </div>
+      <div class="mzad-box">
 
-      <h1>
-        بندور على لاعب...
-      </h1>
+        <div class="mzad-football">
+          ⚽
+        </div>
 
-      <div class="loader"></div>
+        <h1>
+          بندور على لاعب...
+        </h1>
 
-      <div id="status" class="status">
-        ${message}
+        <div class="mzad-loader"></div>
+
+        <div
+          id="mzadStatus"
+          class="mzad-status"
+        >
+          ${text}
+        </div>
+
       </div>
 
     </div>
 
-  `);
+  `;
+
 }
 
 
-// ===============================
+// =====================================
+// ERROR SCREEN
+// =====================================
+
+function showError(error) {
+
+  console.error(error);
+
+  const message =
+    error && error.message
+      ? error.message
+      : String(error);
+
+  getRoot().innerHTML = `
+
+    <div class="mzad-page">
+
+      <div class="mzad-box">
+
+        <div class="mzad-football">
+          ⚠️
+        </div>
+
+        <h2>
+          حصل خطأ
+        </h2>
+
+        <div class="mzad-error">
+          ${message}
+        </div>
+
+        <br>
+
+        <button
+          class="mzad-button"
+          onclick="location.reload()"
+        >
+          🔄 إعادة المحاولة
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+}
+
+
+// =====================================
 // START MATCHMAKING
-// ===============================
+// =====================================
 
 async function startMatchmaking() {
 
   if (!UID) {
-
-    alert("لسه Firebase ما خلصش تسجيل الدخول");
-
+    alert("لسه الاتصال بـ Firebase ما اكتملش.");
     return;
   }
 
-  if (searching) return;
+  if (searching) {
+    return;
+  }
 
   searching = true;
 
-  searchingScreen(
+  showSearching(
     "جاري الاتصال بغرفة الانتظار..."
   );
 
-
   try {
 
-    // ==================================
-    // IMPORTANT:
-    // WRITE DIRECTLY TO OUR OWN NODE
-    // ==================================
+    // مكان انتظار اللاعب الحالي
 
     const myWaitingRef = ref(
       db,
@@ -333,109 +400,84 @@ async function startMatchmaking() {
     );
 
 
-    const waitingPlayer = {
-
-      uid: UID,
-
-      name: "Player",
-
-      status: "waiting",
-
-      createdAt: Date.now()
-
-    };
-
-
-    console.log(
-      "Writing waiting player:",
-      waitingPlayer
-    );
-
+    // كتابة اللاعب في waiting
 
     await set(
       myWaitingRef,
-      waitingPlayer
+      {
+        uid: UID,
+        name: "Player",
+        status: "waiting",
+        createdAt: Date.now()
+      }
     );
 
 
-    // ==================================
-    // VERIFY THE WRITE
-    // ==================================
+    // التأكد أن Firebase كتب البيانات
 
-    const check = await get(
+    const verify = await get(
       myWaitingRef
     );
 
 
-    if (!check.exists()) {
+    if (!verify.exists()) {
 
       throw new Error(
-        "Firebase لم يؤكد كتابة matchmaking/waiting/" + UID
+        "Firebase لم يكتب بيانات waiting."
       );
 
     }
 
 
     console.log(
-      "WAITING WRITE SUCCESS:",
-      check.val()
+      "WAITING:",
+      verify.val()
     );
 
 
-    document.getElementById("status").innerHTML = `
-      ✅ تم تسجيلك في غرفة الانتظار
-      <br>
-      <small>
-        UID: ${UID}
-      </small>
-      <br>
-      <br>
-      مستني لاعب تاني...
-    `;
+    const status =
+      document.getElementById(
+        "mzadStatus"
+      );
 
 
-    // Remove waiting entry
-    // when browser disconnects
+    if (status) {
 
-    await onDisconnect(
+      status.innerHTML =
+        "✅ تم تسجيلك في قائمة الانتظار<br>مستني لاعب تاني...";
+
+    }
+
+
+    // إزالة اللاعب عند قطع الاتصال
+
+    onDisconnect(
       myWaitingRef
     ).remove();
 
 
-    // ==================================
-    // LISTEN FOR OTHER PLAYERS
-    // ==================================
+    // مراقبة غرفة الانتظار
 
-    listenForPlayers();
+    watchWaitingRoom();
 
   }
 
   catch (error) {
 
-    console.error(
-      "WAITING ERROR:",
-      error
-    );
-
-
     searching = false;
 
-
-    showError(
-      "مشكلة في إنشاء غرفة الانتظار",
-      error
-    );
+    showError(error);
 
   }
 
 }
 
 
-// ===============================
-// LISTEN FOR PLAYERS
-// ===============================
+// =====================================
+// WATCH WAITING ROOM
+// =====================================
 
-function listenForPlayers() {
+function watchWaitingRoom() {
 
   const waitingRef = ref(
     db,
@@ -445,53 +487,56 @@ function listenForPlayers() {
 
   onValue(
     waitingRef,
-    async snapshot => {
+    snapshot => {
 
       console.log(
-        "WAITING ROOM:",
+        "WAITING DATA:",
         snapshot.val()
       );
 
 
       if (!snapshot.exists()) {
-
         return;
-
       }
 
 
-      const players =
+      const waiting =
         snapshot.val();
 
 
       const ids =
-        Object.keys(players);
+        Object.keys(waiting);
 
 
-      // Find someone who isn't us
-
-      const opponentId =
+      const opponent =
         ids.find(
           id => id !== UID
         );
 
 
-      if (!opponentId) {
-
+      if (!opponent) {
         return;
-
       }
 
 
       console.log(
         "OPPONENT FOUND:",
-        opponentId
+        opponent
       );
 
 
-      await createMatch(
-        opponentId
+      createMatch(opponent);
+
+    },
+
+    error => {
+
+      console.error(
+        "WAITING LISTENER ERROR:",
+        error
       );
+
+      showError(error);
 
     }
   );
@@ -499,39 +544,39 @@ function listenForPlayers() {
 }
 
 
-// ===============================
+// =====================================
 // CREATE MATCH
-// ===============================
+// =====================================
 
 async function createMatch(
-  opponentId
+  opponentUID
 ) {
 
-  if (MATCH_ID) return;
+  if (MATCH_ID) {
+    return;
+  }
 
 
-  // Same ID for both players
-
-  const ids = [
+  const sorted = [
     UID,
-    opponentId
+    opponentUID
   ].sort();
 
 
   MATCH_ID =
     "match_" +
-    ids[0] +
+    sorted[0] +
     "_" +
-    ids[1];
-
-
-  const matchRef = ref(
-    db,
-    "matches/" + MATCH_ID
-  );
+    sorted[1];
 
 
   try {
+
+    const matchRef = ref(
+      db,
+      "matches/" + MATCH_ID
+    );
+
 
     const existing =
       await get(matchRef);
@@ -552,23 +597,15 @@ async function createMatch(
           players: {
 
             [UID]: {
-
               uid: UID,
-
               ready: false,
-
               formation: null
-
             },
 
-            [opponentId]: {
-
-              uid: opponentId,
-
+            [opponentUID]: {
+              uid: opponentUID,
               ready: false,
-
               formation: null
-
             }
 
           }
@@ -579,7 +616,386 @@ async function createMatch(
     }
 
 
-    // Remove only our waiting entry
+    // إزالة اللاعب الحالي فقط
 
     await remove(
-      ref
+      ref(
+        db,
+        "matchmaking/waiting/" + UID
+      )
+    );
+
+
+    showMatchFound();
+
+  }
+
+  catch (error) {
+
+    showError(error);
+
+  }
+
+}
+
+
+// =====================================
+// MATCH FOUND
+// =====================================
+
+function showMatchFound() {
+
+  getRoot().innerHTML = `
+
+    <div class="mzad-page">
+
+      <div class="mzad-box">
+
+        <div class="mzad-football">
+          🎯
+        </div>
+
+        <h1>
+          تم العثور على خصم!
+        </h1>
+
+        <p class="mzad-muted">
+          تم توصيلك بلاعب حقيقي.
+        </p>
+
+        <button
+          id="chooseFormation"
+          class="mzad-button"
+        >
+          اختيار التشكيلة
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  document
+    .getElementById(
+      "chooseFormation"
+    )
+    .onclick = showFormation;
+
+}
+
+
+// =====================================
+// FORMATION SCREEN
+// =====================================
+
+function showFormation() {
+
+  const buttons =
+    formations.map(
+      formation => `
+
+        <button
+          class="mzad-formation"
+          data-formation="${formation}"
+        >
+          ${formation}
+        </button>
+
+      `
+    ).join("");
+
+
+  getRoot().innerHTML = `
+
+    <div class="mzad-page">
+
+      <div class="mzad-box">
+
+        <h1>
+          اختر التشكيلة
+        </h1>
+
+        <p class="mzad-muted">
+          اختار التشكيلة اللي هتلعب بيها
+        </p>
+
+        <div class="mzad-formations">
+          ${buttons}
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  document
+    .querySelectorAll(
+      ".mzad-formation"
+    )
+    .forEach(button => {
+
+      button.onclick = function() {
+
+        chooseFormation(
+          this.dataset.formation
+        );
+
+      };
+
+    });
+
+}
+
+
+// =====================================
+// CHOOSE FORMATION
+// =====================================
+
+async function chooseFormation(
+  formation
+) {
+
+  try {
+
+    await set(
+      ref(
+        db,
+        "matches/" +
+        MATCH_ID +
+        "/players/" +
+        UID
+      ),
+      {
+        uid: UID,
+        ready: true,
+        formation: formation
+      }
+    );
+
+
+    getRoot().innerHTML = `
+
+      <div class="mzad-page">
+
+        <div class="mzad-box">
+
+          <div class="mzad-football">
+            ⚽
+          </div>
+
+          <h1>
+            تم اختيار التشكيلة
+          </h1>
+
+          <div class="mzad-status">
+            ${formation}
+          </div>
+
+          <div class="mzad-loader"></div>
+
+          <p class="mzad-muted">
+            مستني الخصم يختار تشكيلته...
+          </p>
+
+        </div>
+
+      </div>
+
+    `;
+
+
+    waitForPlayers();
+
+  }
+
+  catch (error) {
+
+    showError(error);
+
+  }
+
+}
+
+
+// =====================================
+// WAIT FOR BOTH PLAYERS
+// =====================================
+
+function waitForPlayers() {
+
+  const playersRef = ref(
+    db,
+    "matches/" +
+    MATCH_ID +
+    "/players"
+  );
+
+
+  onValue(
+    playersRef,
+    async snapshot => {
+
+      if (!snapshot.exists()) {
+        return;
+      }
+
+
+      const players =
+        snapshot.val();
+
+
+      const ids =
+        Object.keys(players);
+
+
+      if (ids.length !== 2) {
+        return;
+      }
+
+
+      const ready =
+        ids.every(
+          id =>
+            players[id].ready === true
+        );
+
+
+      if (!ready) {
+        return;
+      }
+
+
+      await set(
+        ref(
+          db,
+          "matches/" +
+          MATCH_ID +
+          "/status"
+        ),
+        "auction"
+      );
+
+
+      showAuction();
+
+    }
+  );
+
+}
+
+
+// =====================================
+// AUCTION PLACEHOLDER
+// =====================================
+
+function showAuction() {
+
+  getRoot().innerHTML = `
+
+    <div class="mzad-page">
+
+      <div class="mzad-box">
+
+        <div class="mzad-football">
+          🔨
+        </div>
+
+        <h1>
+          المباراة جاهزة!
+        </h1>
+
+        <p class="mzad-muted">
+          تم تجهيز اللاعبين والتشكيلات.
+        </p>
+
+        <div class="mzad-card">
+          المزاد هيبدأ هنا في الخطوة التالية.
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+// =====================================
+// FIREBASE AUTH
+// =====================================
+
+onAuthStateChanged(
+  auth,
+  async user => {
+
+    if (!user) {
+      return;
+    }
+
+
+    UID = user.uid;
+
+
+    console.log(
+      "UID:",
+      UID
+    );
+
+
+    try {
+
+      // كتابة Player
+
+      await set(
+        ref(
+          db,
+          "players/" + UID
+        ),
+        {
+          uid: UID,
+          name: "Player",
+          budget: 200000000,
+          squad: [],
+          online: true,
+          connectedAt: Date.now()
+        }
+      );
+
+
+      console.log(
+        "PLAYER WRITE: OK"
+      );
+
+
+      showHome();
+
+    }
+
+    catch (error) {
+
+      showError(error);
+
+    }
+
+  }
+);
+
+
+// =====================================
+// LOGIN
+// =====================================
+
+signInAnonymously(
+  auth
+).catch(
+  error => {
+
+    showError(error);
+
+  }
+);
